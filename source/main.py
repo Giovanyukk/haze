@@ -10,12 +10,13 @@ from lxml import html
 
 os.system('cls')  # Limpia la pantalla
 
+# Variables de usuario
 username = ""
 password = ""
-# Hay que completar estos datos para poder utilizar la funcion de omitir juegos que ya estan en la biblioteca
 webAPIKey = "" # https://steamcommunity.com/dev/apikey
 steamID64 = "" # https://steamidfinder.com/
 
+# Detecta si existe un archivo de configuracion, utilizándolo en tal caso o creando uno en caso contrario
 if (os.path.isfile('user.json')):
     try:
         with open('./user.json','r',encoding='utf-8') as usercfg:
@@ -94,7 +95,7 @@ def toDataFrame(appID):
         if(os.path.exists('./database/steamdb.html')):
             with open('./database/steamdb.html','r',encoding='utf-8') as htmlfile:
                 # Da la opcion de omitir los juegos que ya estan comprados
-                if(webAPIKey != "" and steamID64 != "" and input('Omitir juegos que ya estan en mi biblioteca? (y/n)') == "y"):
+                if(webAPIKey != "" and steamID64 != "" and input('Omitir juegos que ya estan en mi biblioteca? (y/n) ') == "y"):
                     ownedGamesURL = "http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=" + webAPIKey + "&steamid=" + steamID64 + "&format=json"
                     gamesData = json.loads(session.get(ownedGamesURL).text)
                     ownedGamesList = [0] * len(gamesData['response']['games'])
@@ -191,10 +192,9 @@ def toDataFrame(appID):
     print(dataBaseAux)
     return dataBaseAux
 
-
-while(1):
+while(True):
     # AppIDs de los juegos a analizar.
-    print('A continuacion, ingrese AppIDs separados por comas (Tambien puede usar -1 para actualizacion general y -2 para usar el archivo steamdb.html)')
+    print('Ingrese AppIDs separados por comas (Tambien puede usar -1 para actualizacion general y -2 para usar el archivo steamdb.html)')
     appIDs = input('AppIDs:')
     if (appIDs == ''):  # Si no se especifican appIDs
         exit()  # Termina el programa
