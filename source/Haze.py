@@ -8,6 +8,7 @@ from time import sleep
 from datetime import datetime
 from lxml import html
 import sys
+#import StyleFrame
 
 os.system('cls')  # Limpia la pantalla
 
@@ -180,8 +181,8 @@ def toDataFrame(appID):
                 medianProfit = ((medianPrice * cardsDropped *
                                  0.8696 / (gamePrice / 100)) - 1)
                 # Arma un array de arrays unidimensionales con los datos que se van a agregar.
-                dataArray = [[gameName], [gamePrice / 100], [minimumProfit], [averageProfit], [
-                    medianProfit], [str(appID[i])], [cardPrices], [datetime.now().strftime('%d/%m/%y %H:%M')]]
+                dataArray = [[gameName], [gamePrice / 100], [round(minimumProfit,3)], [round(averageProfit,3)], [
+                    round(medianProfit,3)], [str(appID[i])], [cardPrices], [datetime.now().strftime('%d/%m/%y %H:%M')]]
 
         # Crea un DataFrame con los datos para poder agregarlos.
         gamesData = pd.DataFrame.from_dict(
@@ -233,6 +234,12 @@ while(True):
     # Guarda todo en un archivo .csv.
     if (os.path.exists('database')):
         dataBase.to_csv('database/main.csv', index=False)
+        dataBase.to_excel('database/main.xlsx', index=False, float_format='%.3f', encoding='cp1252')
+        #excel_writer = StyleFrame.ExcelWriter('database/main.xlsx')
+        #sf = StyleFrame(dataBase)
+        #sf.to_excel(excel_writer, index=False, float_format='%.3f', encoding='cp1252')
+        #excel_writer.save()
     else:
         os.makedirs('database')
         dataBase.to_csv('database/main.csv', index=False)
+        dataBase.to_excel('database/main.xlsx', index=False, float_format='%.3f', encoding='cp1252')
