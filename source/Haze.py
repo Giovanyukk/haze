@@ -1,8 +1,9 @@
-import requests
+import requests, pickle
 import json
 import numpy as np
 import pandas as pd
 import steam.webauth as wa
+import steam.guard as guard
 import os
 from time import sleep
 from datetime import datetime
@@ -13,15 +14,17 @@ import sys
 os.system('cls')  # Limpia la pantalla
 
 # Variables de usuario
-username = ""
-password = ""
-webAPIKey = "" # https://steamcommunity.com/dev/apikey
-steamID64 = "" # https://steamidfinder.com/
+username = ''
+password = ''
+webAPIKey = '' # https://steamcommunity.com/dev/apikey
+steamID64 = '' # https://steamidfinder.com/
+
+version = '0.3.0'
 
 # Detecta si existe un archivo de configuracion, utilizándolo en tal caso o creando uno en caso contrario
 if (os.path.isfile('user.json')):
     try:
-        with open('./user.json','r',encoding='utf-8') as usercfg:
+        with open('user.json','r',encoding='utf-8') as usercfg:
             data = json.load(usercfg)
             username = data['username']
             password = data['password']
@@ -32,7 +35,7 @@ if (os.path.isfile('user.json')):
         input()
         sys.exit()
 else:
-    with open('./user.json','w',encoding='utf-8') as usercfg:
+    with open('user.json','w',encoding='utf-8') as usercfg:
         print('Se creará un archivo de configuracion en el directorio del programa')
         print('Para poder omitir los juegos ya comprados al agregar juegos desde steamdb.info, deberá agregar su SteamID64 y Steam API Key al archivo de configuración')
         username = input('Ingrese su nombre de usuario: ')
@@ -40,9 +43,15 @@ else:
         data = {'username':username, 'password':password, 'key':'', 'steamID64':''}
         json.dump(data, usercfg)
 
-user = wa.WebAuth(username)  # Crea un objeto usuario.
-# Solicita la contraseña y el código 2FA para crear una sesión (session se utiliza de la misma forma que request).
-session = user.cli_login(password)
+# Intenta iniciar sesión. Si existe el archivo 2FA.maFile, genera el código 2FA automaticamente
+user = wa.WebAuth(username)
+if(os.path.isfile('2FA.maFile')):
+    with open('2Fa.maFile','r') as f:
+        data = json.load(f)
+        shared_secret = data['shared_secret']
+    session = user.cli_login(password, twofactor_code=guard.SteamAuthenticator(secrets=data).get_code())
+else:
+    session = user.cli_login(password)
 
 # Centra los headers de la DataFrame.
 pd.set_option('colheader_justify', 'center')
@@ -67,11 +76,12 @@ def priceList(appID):
         str(appID)
     responses = session.get(cardsURL)
     # Si falla la solicitud, reintenta cada 5 segundos.
+    i = 0
     while(responses.status_code != 200):
             os.system('cls')
-            print("Error, reintentando en 5 segundos...")
+            print('Error, reintentando en 5 segundos... (' + i++ + ')')
             sleep(5)
-            os.system("cls")
+            os.system('cls')
             responses = session.get(cardsURL)
     
     cardsData = json.loads(responses.text)
@@ -89,20 +99,21 @@ def priceList(appID):
 
 # Transforma una lista de appIDs en un dataframe con los respectivos juegos.
 def toDataFrame(appID):
+    global dataBase
     # Si el primer appID es -1, se actualiza toda la lista.
     if(appID[0] == -1):
-        if(dataBase['AppID'].tolist() != []):
+        if(dataBase['AppID'].tolist() != [] and os.path.isfile('database/main.csv')):
             return toDataFrame(dataBase['AppID'].tolist())
         else:
-            print('La base de datos no existe o está vacia. Presione enter para cerrar el programa...')
-            input()
-            sys.exit()
+            os.system('cls')
+            print('La base de datos no existe o está vacia.')
+            main()
     # Si es -2, saca los appIDs del archivo steamdb.html ubicado en la carpeta database
     if(appID[0] == -2):
-        if(os.path.exists('./database/steamdb.html')):
-            with open('./database/steamdb.html','r',encoding='utf-8') as htmlfile:
+        if(os.path.exists('database/steamdb.html')):
+            with open('database/steamdb.html','r',encoding='utf-8') as htmlfile:
                 # Da la opcion de omitir los juegos que ya estan comprados
-                if(webAPIKey != "" and steamID64 != "" and (input('Omitir juegos que ya estan en mi biblioteca? (y/n) ') or 'y') == "y"):
+                if(webAPIKey != "" and steamID64 != "" and (input('Omitir juegos que ya estan en mi biblioteca? (Y/n) ') or 'y') == "y"):
                     ownedGamesURL = "http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=" + webAPIKey + "&steamid=" + steamID64 + "&format=json"
                     gamesData = json.loads(session.get(ownedGamesURL).text)
                     ownedGamesList = [0] * len(gamesData['response']['games'])
@@ -122,9 +133,22 @@ def toDataFrame(appID):
                     return toDataFrame(appidlist)
         else:
             os.system('cls')
-            print("No existe el archivo steamdb.html. Debe descargarlo y ubicarlo en la carpeta 'database'. Presione enter para cerrar el programa...")
-            input()
-            sys.exit()
+            print("No existe el archivo steamdb.html. Debe descargarlo y ubicarlo en la carpeta 'database'.")
+            main()
+    # Si es -3, borra el archivo main
+    if(appID[0] == -3):
+        if(os.path.isfile('database/main.csv')):
+            dataBase = pd.DataFrame.from_dict(dataStructure)
+            os.remove('database/main.csv')
+            if(os.path.isfile('database/main.xlsx')):
+                os.remove('database/main.xlsx')
+            os.system('cls')
+            print("Se eliminó la base de datos.")
+            main()
+        else:
+            os.system('cls')
+            print("No existe base de datos.")
+            main()
 
     # Crea una base de datos auxiliar.
     dataBaseAux = pd.DataFrame.from_dict(dataStructure)
@@ -194,17 +218,21 @@ def toDataFrame(appID):
         # Imprime el número de juego / número de juegos totales.
         print(str(i+1) + '/' + str(len(appID)))
         # Imprime la información del juego siendo analizado actualmente.
+        gamesData.drop(columns=['Lista de cromos', 'Ultima actualización'], inplace=True)
         print(gamesData)
     os.system('cls')
-    print(dataBaseAux)
+    print(dataBaseAux.drop(columns=['Lista de cromos', 'Ultima actualización']))
     return dataBaseAux
 
-while(True):
+def main():
+    global dataBase
+    global storeSession
     # AppIDs de los juegos a analizar.
     print('Ingrese AppIDs separados por comas o una de las siguientes opciones:')
     print('\t(-1) Actualización general')
     print('\t(-2) Utilizar archivo steamdb.html')
-    print('\t(Enter) Salir del programa')
+    print('\t(-3) Eliminar base de datos')
+    print('\t(Enter) Salir')
     appIDs = input('AppIDs:')
     if (appIDs == ''):  # Si no se especifican appIDs
         sys.exit()  # Termina el programa
@@ -243,3 +271,5 @@ while(True):
         os.makedirs('database')
         dataBase.to_csv('database/main.csv', index=False)
         dataBase.to_excel('database/main.xlsx', index=False, float_format='%.3f', encoding='cp1252')
+    main()
+main()
