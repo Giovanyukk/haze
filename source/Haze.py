@@ -9,9 +9,16 @@ from time import sleep
 from datetime import datetime
 from lxml import html
 import sys
-#import StyleFrame
+import logging
+
+# Se inicializa el logger para el manejo de errores
+logging.basicConfig(filename='log.txt', level=logging.ERROR, format='%(asctime)s %(levelname)s %(name)s %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
 
 os.system('cls')  # Limpia la pantalla
+
+# Si no existe la carpeta database, la crea
+if(not os.path.exists('database')):
+    os.makedirs('database')
 
 # Variables de usuario
 username = ''
@@ -19,7 +26,7 @@ password = ''
 webAPIKey = '' # https://steamcommunity.com/dev/apikey
 steamID64 = '' # https://steamidfinder.com/
 
-version = '0.3.0'
+version = '0.4.0'
 
 # Detecta si existe un archivo de configuracion, utilizándolo en tal caso o creando uno en caso contrario
 if (os.path.isfile('user.json')):
@@ -48,7 +55,6 @@ user = wa.WebAuth(username)
 if(os.path.isfile('2FA.maFile')):
     with open('2Fa.maFile','r') as f:
         data = json.load(f)
-        shared_secret = data['shared_secret']
     session = user.cli_login(password, twofactor_code=guard.SteamAuthenticator(secrets=data).get_code())
 else:
     session = user.cli_login(password)
@@ -76,10 +82,9 @@ def priceList(appID):
         str(appID)
     responses = session.get(cardsURL)
     # Si falla la solicitud, reintenta cada 5 segundos.
-    i = 0
     while(responses.status_code != 200):
             os.system('cls')
-            print('Error, reintentando en 5 segundos... (' + i++ + ')')
+            print('Error, reintentando en 5 segundos...')
             sleep(5)
             os.system('cls')
             responses = session.get(cardsURL)
@@ -161,7 +166,7 @@ def toDataFrame(appID):
         # Si falla la solicitud, reintenta cada 5 segundos.
         while(response.status_code != 200):
             os.system('cls')
-            print("Error, reintentando en 5 segundos...")
+            print('Error, reintentando en 5 segundos...')
             sleep(5)
             os.system("cls")
             response = storeSession.get(storeURL)
@@ -251,25 +256,15 @@ def main():
     except KeyboardInterrupt:
         sys.exit()
     except Exception as e:
-        with open('log.txt',"w") as f:
-            f.write(str(e))
+        logging.error(e)
         sys.exit()
     # Elimina los duplicados.
     dataBase.drop_duplicates(subset='Nombre', keep='last',
                              inplace=True, ignore_index=True)
     # Ordena por retorno mínimo.
     dataBase.sort_values('Retorno mínimo', ascending=False, inplace=True)
-    # Guarda todo en un archivo .csv.
-    if (os.path.exists('database')):
-        dataBase.to_csv('database/main.csv', index=False)
-        dataBase.to_excel('database/main.xlsx', index=False, float_format='%.3f', encoding='cp1252')
-        #excel_writer = StyleFrame.ExcelWriter('database/main.xlsx')
-        #sf = StyleFrame(dataBase)
-        #sf.to_excel(excel_writer, index=False, float_format='%.3f', encoding='cp1252')
-        #excel_writer.save()
-    else:
-        os.makedirs('database')
-        dataBase.to_csv('database/main.csv', index=False)
-        dataBase.to_excel('database/main.xlsx', index=False, float_format='%.3f', encoding='cp1252')
+    # Guarda todo en un archivo .csv para compatibilidad y un archivo .xlsx para mejor visualización.
+    dataBase.to_csv('database/main.csv', index=False)
+    dataBase.to_excel('database/main.xlsx', index=False, float_format='%.3f', encoding='cp1252')
     main()
 main()
