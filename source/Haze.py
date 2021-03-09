@@ -90,6 +90,9 @@ def priceList(appID):
             responses = session.get(cardsURL)
     
     cardsData = json.loads(responses.text)
+    # Si no existen cartas, retorna 0 para evitar un error
+    if(cardsData['total_count'] == 0):
+        return [0]
     # Genera una array con la misma longitud que la cantidad de cromos.
     cardPrices = np.zeros(len(cardsData['results']))
 
