@@ -26,8 +26,6 @@ password = ''
 webAPIKey = '' # https://steamcommunity.com/dev/apikey
 steamID64 = '' # https://steamidfinder.com/
 
-version = '0.4.0'
-
 # Detecta si existe un archivo de configuracion, utilizándolo en tal caso o creando uno en caso contrario
 if (os.path.isfile('user.json')):
     try:
