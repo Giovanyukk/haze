@@ -135,3 +135,4 @@ user.json
 .vscode/
 *.maFile
 logo.png
+/venv*/
