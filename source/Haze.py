@@ -266,6 +266,8 @@ def main():
     dataBase.sort_values('Retorno mínimo', ascending=False, inplace=True)
     # Guarda todo en un archivo .csv para compatibilidad y un archivo .xlsx para mejor visualización.
     dataBase.to_csv('database/main.csv', index=False)
-    dataBase.to_excel(pd.ExcelWriter('database/main.xlsx', engine='xlsxwriter'), index=False, float_format='%.3f', encoding='cp1252')
+    excel_writer = pd.ExcelWriter('database/main.xlsx', engine='xlsxwriter')
+    dataBase.to_excel(excel_writer, index=False, float_format='%.3f', encoding='cp1252')
+    excel_writer.save()
     main()
 main()
