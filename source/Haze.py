@@ -1,4 +1,4 @@
-import requests, pickle
+import requests
 import json
 import numpy as np
 import pandas as pd
@@ -266,6 +266,6 @@ def main():
     dataBase.sort_values('Retorno mínimo', ascending=False, inplace=True)
     # Guarda todo en un archivo .csv para compatibilidad y un archivo .xlsx para mejor visualización.
     dataBase.to_csv('database/main.csv', index=False)
-    dataBase.to_excel('database/main.xlsx', index=False, float_format='%.3f', encoding='cp1252')
+    dataBase.to_excel(pd.ExcelWriter('database/main.xlsx', engine='xlsxwriter'), index=False, float_format='%.3f', encoding='cp1252')
     main()
 main()
