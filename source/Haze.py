@@ -268,14 +268,14 @@ def main():
     dataBase.to_csv('database/main.csv', index=False)
     excel_writer = pd.ExcelWriter('database/main.xlsx', engine='xlsxwriter')
     dataBase.to_excel(excel_writer, index=False, float_format='%.3f', encoding='cp1252', sheet_name='Cromos')
-    worksheet = excel_writer.sheets['Cromos']
-    for idx, col in enumerate(dataBase):  # loop through all columns
+    worksheet = excel_writer.sheets['Cromos'] # Formateo del archivo .xlsx
+    for idx, col in enumerate(dataBase):
         series = dataBase[col]
         max_len = max((
-            series.astype(str).map(len).max(),  # len of largest item
-            len(str(series.name))  # len of column name/header
-            )) + 1  # adding a little extra space
-        worksheet.set_column(idx, idx, max_len)  # set column widt
+            series.astype(str).map(len).max(), # Ancho del item mas grande
+            len(str(series.name)) # Ancho del nombre de la columna
+            )) + 1 # Espacio extra
+        worksheet.set_column(idx, idx, max_len) # Se establece el ancho de la columna
     excel_writer.save()
     main()
 main()
