@@ -267,7 +267,15 @@ def main():
     # Guarda todo en un archivo .csv para compatibilidad y un archivo .xlsx para mejor visualización.
     dataBase.to_csv('database/main.csv', index=False)
     excel_writer = pd.ExcelWriter('database/main.xlsx', engine='xlsxwriter')
-    dataBase.to_excel(excel_writer, index=False, float_format='%.3f', encoding='cp1252')
+    dataBase.to_excel(excel_writer, index=False, float_format='%.3f', encoding='cp1252', sheet_name='Cromos')
+    worksheet = excel_writer.sheets['Cromos']
+    for idx, col in enumerate(dataBase):  # loop through all columns
+        series = dataBase[col]
+        max_len = max((
+            series.astype(str).map(len).max(),  # len of largest item
+            len(str(series.name))  # len of column name/header
+            )) + 1  # adding a little extra space
+        worksheet.set_column(idx, idx, max_len)  # set column widt
     excel_writer.save()
     main()
 main()
