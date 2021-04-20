@@ -276,6 +276,9 @@ def main():
             len(str(series.name)) # Ancho del nombre de la columna
             )) + 1 # Espacio extra
         worksheet.set_column(idx, idx, max_len) # Se establece el ancho de la columna
+    worksheet.conditional_format('C2:C{}'.format(len(dataBase) + 1), {'type': '3_color_scale', 'min_type': 'num', 'mid_value': 0, 'mid_color': '#FFFFFF'})
+    worksheet.conditional_format('D2:D{}'.format(len(dataBase) + 1), {'type': '3_color_scale', 'min_type': 'num', 'mid_value': 0, 'mid_color': '#FFFFFF'})
+    worksheet.conditional_format('E2:E{}'.format(len(dataBase) + 1), {'type': '3_color_scale', 'min_type': 'num', 'mid_value': 0, 'mid_color': '#FFFFFF'})
     excel_writer.save()
     main()
 main()
