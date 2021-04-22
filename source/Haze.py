@@ -172,11 +172,13 @@ def toDataFrame(appID):
             os.system("cls")
             response = storeSession.get(storeURL)
         
-        sleep(1)
+        if(len(appID) > 250):
+            sleep(1)
         gameData = json.loads(response.text)
 
         cardPrices = priceList(appID[i])  # Obtiene el precio de las cartas.
-        sleep(1)
+        if(len(appID) > 250):
+            sleep(1)
 
         # Obtiene el nombre del juego.
         gameName = gameData[str(appID[i])]['data']['name']
