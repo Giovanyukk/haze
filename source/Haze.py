@@ -229,7 +229,7 @@ def toDataFrame(appID):
         gamesData.drop(columns=['Lista de cromos', 'Ultima actualización'], inplace=True)
         print(gamesData)
     os.system('cls')
-    print(dataBaseAux.drop(columns=['Lista de cromos', 'Ultima actualización']))
+    print(dataBaseAux.drop(columns=['Lista de cromos', 'Ultima actualización']).sort_values('Retorno mínimo', ascending=False, ignore_index=True).head())
     return dataBaseAux
 
 def main():
