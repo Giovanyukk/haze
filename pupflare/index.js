@@ -110,5 +110,5 @@ const responseHeadersToRemove = ["Accept-Ranges", "Content-Length", "Keep-Alive"
         }
     });
     app.listen(3000);
-    setTimeout(function(){process.exit(0)}, 15000)
+    //setTimeout(function(){process.exit(0)}, 15000)
 })();
