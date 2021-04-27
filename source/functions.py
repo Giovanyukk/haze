@@ -10,6 +10,7 @@ headers = ['Nombre', 'Precio', 'Retorno mínimo', 'Retorno medio', 'Retorno medi
 # Crea un diccionario con la estructura de la base de datos.
 data_structure = {header: [] for header in headers}
 
+
 # Obtiene una lista de los precios mínimos de los cromos del juego.
 def get_price_list(appID, session):
     # Obtiene el link a los cromos de un juego.
@@ -18,14 +19,14 @@ def get_price_list(appID, session):
     responses = session.get(cards_URL)
     # Si falla la solicitud, reintenta cada 5 segundos.
     while(responses.status_code != 200):
-            os.system('cls')
-            print('Error, reintentando en 5 segundos...')
-            sleep(5)
-            os.system('cls')
-            responses = session.get(cards_URL)
-    
+        os.system('cls')
+        print('Error, reintentando en 5 segundos...')
+        sleep(5)
+        os.system('cls')
+        responses = session.get(cards_URL)
+
     cards_data = json.loads(responses.text)
-    # Si no existen cartas, retorna 0 para evitar un error
+    # Si no existen cromos, retorna 0 para evitar un error
     if(cards_data['total_count'] == 0):
         return [0]
     # Genera una array con la misma longitud que la cantidad de cromos.
@@ -57,12 +58,13 @@ def to_dataframe(appID, session):
             sleep(5)
             os.system("cls")
             response = session.get(store_URL)
-        
+
         if(len(appID) > 250):
             sleep(1)
         game_data = json.loads(response.text)
 
-        cards_prices = get_price_list(appID[i], session)  # Obtiene el precio de las cartas.
+        # Obtiene el precio de los cromos.
+        cards_prices = get_price_list(appID[i], session)
         if(len(appID) > 250):
             sleep(1)
 
@@ -75,7 +77,8 @@ def to_dataframe(appID, session):
 
         if (len(cards_prices) != 0):  # Si el juego posee cromos...
             # Obtiene la cantidad de los cromos que se dropean del juego.
-            cards_dropped = 3 if len(cards_prices) == 5 else len(cards_prices)//2
+            cards_dropped = 3 if len(
+                cards_prices) == 5 else len(cards_prices)//2
             # Calcula la media de los precios de los cromos.
             average_price = np.average(cards_prices)
             # Calcula la mediana de los precios de los cromos.
@@ -99,8 +102,8 @@ def to_dataframe(appID, session):
                 median_profit = ((median_price * cards_dropped *
                                  0.8696 / (game_price / 100)) - 1)
                 # Arma un array de arrays unidimensionales con los datos que se van a agregar.
-                data_array = [[game_name], [game_price / 100], [round(minimum_profit,3)], [round(average_profit,3)], [
-                    round(median_profit,3)], [str(appID[i])], [cards_prices], [datetime.now().strftime('%d/%m/%y %H:%M')]]
+                data_array = [[game_name], [game_price / 100], [round(minimum_profit, 3)], [round(average_profit, 3)], [
+                    round(median_profit, 3)], [str(appID[i])], [cards_prices], [datetime.now().strftime('%d/%m/%y %H:%M')]]
 
         # Crea un DataFrame con los datos para poder agregarlos.
         games_data = pd.DataFrame.from_dict(
@@ -112,27 +115,36 @@ def to_dataframe(appID, session):
         # Imprime el número de juego / número de juegos totales.
         print(str(i+1) + '/' + str(len(appID)))
         # Imprime la información del juego siendo analizado actualmente.
-        games_data.drop(columns=['Lista de cromos', 'Ultima actualización'], inplace=True)
+        games_data.drop(columns=['Lista de cromos',
+                        'Ultima actualización'], inplace=True)
         print(games_data)
     os.system('cls')
-    print(database_aux.drop(columns=['Lista de cromos', 'Ultima actualización']).sort_values('Retorno mínimo', ascending=False, ignore_index=True).head())
+    print(database_aux.drop(columns=['Lista de cromos', 'Ultima actualización']).sort_values(
+        'Retorno mínimo', ascending=False, ignore_index=True).head())
     return database_aux
 
+
 def save_database(dataBase):
-    dataBase.drop_duplicates(subset='Nombre', keep='last', inplace=True, ignore_index=True)
+    dataBase.drop_duplicates(subset='Nombre', keep='last',
+                             inplace=True, ignore_index=True)
     dataBase.sort_values('Retorno mínimo', ascending=False, inplace=True)
     dataBase.to_csv('database/main.csv', index=False)
     excel_writer = pd.ExcelWriter('database/main.xlsx', engine='xlsxwriter')
-    dataBase.to_excel(excel_writer, index=False, float_format='%.3f', encoding='cp1252', sheet_name='Cromos')
-    worksheet = excel_writer.sheets['Cromos'] # Formateo del archivo .xlsx
+    dataBase.to_excel(excel_writer, index=False, float_format='%.3f',
+                      encoding='cp1252', sheet_name='Cromos')
+    worksheet = excel_writer.sheets['Cromos']  # Formateo del archivo .xlsx
     for idx, col in enumerate(dataBase):
         series = dataBase[col]
         max_len = max((
-            series.astype(str).map(len).max(), # Ancho del item mas grande
-            len(str(series.name)) # Ancho del nombre de la columna
-            )) + 1 # Espacio extra
-        worksheet.set_column(idx, idx, max_len) # Se establece el ancho de la columna
-    worksheet.conditional_format('C2:C{}'.format(len(dataBase) + 1), {'type': '3_color_scale', 'min_type': 'num', 'mid_value': 0, 'mid_color': '#FFFFFF'})
-    worksheet.conditional_format('D2:D{}'.format(len(dataBase) + 1), {'type': '3_color_scale', 'min_type': 'num', 'mid_value': 0, 'mid_color': '#FFFFFF'})
-    worksheet.conditional_format('E2:E{}'.format(len(dataBase) + 1), {'type': '3_color_scale', 'min_type': 'num', 'mid_value': 0, 'mid_color': '#FFFFFF'})
+            series.astype(str).map(len).max(),  # Ancho del item mas grande
+            len(str(series.name))  # Ancho del nombre de la columna
+        )) + 1  # Espacio extra
+        # Se establece el ancho de la columna
+        worksheet.set_column(idx, idx, max_len)
+    worksheet.conditional_format('C2:C{}'.format(len(
+        dataBase) + 1), {'type': '3_color_scale', 'min_type': 'num', 'mid_value': 0, 'mid_color': '#FFFFFF'})
+    worksheet.conditional_format('D2:D{}'.format(len(
+        dataBase) + 1), {'type': '3_color_scale', 'min_type': 'num', 'mid_value': 0, 'mid_color': '#FFFFFF'})
+    worksheet.conditional_format('E2:E{}'.format(len(
+        dataBase) + 1), {'type': '3_color_scale', 'min_type': 'num', 'mid_value': 0, 'mid_color': '#FFFFFF'})
     excel_writer.save()

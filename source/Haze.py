@@ -12,12 +12,13 @@ from subprocess import call
 from lxml import html
 from zipfile import ZipFile
 
-from functions import to_dataframe, save_database # Funciones internas
+from functions import to_dataframe, save_database  # Funciones internas
 
 os.system('cls')  # Limpia la pantalla
 
 # Se inicializa el logger para el manejo de errores
-logging.basicConfig(filename='log.txt', level=logging.ERROR, format='%(asctime)s %(levelname)s %(name)s %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
+logging.basicConfig(filename='log.txt', level=logging.ERROR,
+                    format='%(asctime)s %(levelname)s %(name)s %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
 
 # Si no existe la carpeta database, la crea
 if(not os.path.exists('database')):
@@ -38,19 +39,20 @@ if(not os.path.exists('pupflare')):
     call('npm install', cwd='pupflare', shell=True)
 
 # Configura el thread que corre el script de puppeteer
-js = threading.Thread(target=call, args=('node pupflare/index.js',), daemon=True)
+js = threading.Thread(target=call, args=(
+    'node pupflare/index.js',), daemon=True)
 js.start()
 
 # Variables de usuario
 username = ''
 password = ''
-webAPIKey = '' # https://steamcommunity.com/dev/apikey
-steamID64 = '' # https://steamidfinder.com/
+webAPIKey = ''  # https://steamcommunity.com/dev/apikey
+steamID64 = ''  # https://steamidfinder.com/
 
 # Detecta si existe un archivo de configuracion, utilizándolo en tal caso o creando uno en caso contrario
 if (os.path.isfile('user.json')):
     try:
-        with open('user.json','r',encoding='utf-8') as usercfg:
+        with open('user.json', 'r', encoding='utf-8') as usercfg:
             data = json.load(usercfg)
             username = data['username']
             password = data['password']
@@ -61,21 +63,23 @@ if (os.path.isfile('user.json')):
         input()
         sys.exit()
 else:
-    with open('user.json','w',encoding='utf-8') as usercfg:
+    with open('user.json', 'w', encoding='utf-8') as usercfg:
         print('Se creará un archivo de configuracion en el directorio del programa')
         print('Para poder omitir los juegos ya comprados al agregar juegos desde steamdb.info, deberá agregar su SteamID64 y Steam API Key al archivo de configuración')
         username = input('Ingrese su nombre de usuario: ')
         password = input('Ingrese su contraseña: ')
-        data = {'username':username, 'password':password, 'key':'', 'steamID64':''}
+        data = {'username': username, 'password': password,
+                'key': '', 'steamID64': ''}
         json.dump(data, usercfg)
 
 # Intenta iniciar sesión. Si existe el archivo 2FA.maFile, genera el código 2FA automaticamente
 user = wa.WebAuth(username)
 if(os.path.isfile('2FA.maFile')):
-    with open('2Fa.maFile','r') as f:
+    with open('2Fa.maFile', 'r') as f:
         data = json.load(f)
     # La sesion se guarda en una variable para poder usarse posteriormente para las solicitudes
-    session = user.cli_login(password, twofactor_code=guard.SteamAuthenticator(secrets=data).get_code())
+    session = user.cli_login(
+        password, twofactor_code=guard.SteamAuthenticator(secrets=data).get_code())
 else:
     session = user.cli_login(password)
 
@@ -96,10 +100,10 @@ else:
 
 # Entradas del menu principal
 menu = {}
-menu['1']="Actualización general" 
-menu['2']="Actualizar desde steamdb.info"
-menu['3']="Eliminar base de datos"
-menu['4']="Salir"
+menu['1'] = "Actualización general"
+menu['2'] = "Actualizar desde steamdb.info"
+menu['3'] = "Eliminar base de datos"
+menu['4'] = "Salir"
 
 os.system('cls')  # Limpia la pantalla
 
@@ -113,7 +117,8 @@ try:
         option = input('Opción: ')
         if(option == '1'):
             if(database['AppID'].tolist() != [] and os.path.isfile('database/main.csv')):
-                database = database.append(to_dataframe(database['AppID'].tolist(), session), ignore_index=True)
+                database = database.append(to_dataframe(
+                    database['AppID'].tolist(), session), ignore_index=True)
                 save_database(database)
             else:
                 os.system('cls')
@@ -121,28 +126,34 @@ try:
         elif(option == '2'):
             with open('database/steamdb.html', 'w', encoding='utf-8') as f:
                 while(os.stat('database/steamdb.html').st_size < 10000):
-                    f.write(requests.get('http://localhost:3000/?url=https://steamdb.info/sales/?max_price=16&min_reviews=0&min_rating=0&min_discount=0&cc=ar&category=29&displayOnly=Game').text)
-            with open('database/steamdb.html','r',encoding='utf-8') as htmlfile:
+                    f.write(requests.get(
+                        'http://localhost:3000/?url=https://steamdb.info/sales/?max_price=16&min_reviews=0&min_rating=0&min_discount=0&cc=ar&category=29&displayOnly=Game').text)
+            with open('database/steamdb.html', 'r', encoding='utf-8') as htmlfile:
                 # Da la opcion de omitir los juegos que ya estan comprados
                 if(webAPIKey != "" and steamID64 != "" and (input('Omitir juegos que ya estan en mi biblioteca? (Y/n) ') or 'y') == "y"):
-                    owned_games_URL = "http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=" + webAPIKey + "&steamid=" + steamID64 + "&format=json"
+                    owned_games_URL = "http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=" + \
+                        webAPIKey + "&steamid=" + steamID64 + "&format=json"
                     games_data = json.loads(session.get(owned_games_URL).text)
-                    owned_games_list = [0] * len(games_data['response']['games'])
+                    owned_games_list = [0] * \
+                        len(games_data['response']['games'])
                     for i in range(len(games_data['response']['games'])):
-                        owned_games_list[i] = int(games_data['response']['games'][i]['appid'])
+                        owned_games_list[i] = int(
+                            games_data['response']['games'][i]['appid'])
                     content = htmlfile.read()
                     tree = html.fromstring(content)
                     appidlist = tree.xpath('//tr[@data-appid]/@data-appid')
                     for i in owned_games_list:
                         if str(i) in appidlist:
                             appidlist.remove(str(i))
-                    database = database.append(to_dataframe(appidlist, session), ignore_index=True)
+                    database = database.append(to_dataframe(
+                        appidlist, session), ignore_index=True)
                     save_database(database)
                 else:
                     content = htmlfile.read()
                     tree = html.fromstring(content)
                     appidlist = tree.xpath('//tr[@data-appid]/@data-appid')
-                    database = database.append(to_dataframe(appidlist, session), ignore_index=True)
+                    database = database.append(to_dataframe(
+                        appidlist, session), ignore_index=True)
                     save_database(database)
         elif(option == '3'):
             if(os.path.isfile('database/main.csv')):
@@ -168,4 +179,3 @@ except KeyboardInterrupt:
 except Exception as e:
     logging.error(e)
     sys.exit()
-    
