@@ -136,3 +136,5 @@ user.json
 *.maFile
 logo.png
 /venv*/
+/pupflare/node_modules/
+/pupflare/package-lock.json
