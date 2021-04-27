@@ -27,7 +27,8 @@ if(not os.path.exists('database')):
 if(not os.path.exists('pupflare')):
     download_link = 'https://github.com/unixfox/pupflare/archive/refs/heads/master.zip'
     r = requests.get(download_link, allow_redirects=True)
-    open('pupflare-master.zip', 'wb').write(r.content)
+    with open('pupflare-master.zip', 'wb') as zip:
+        zip.write(r.content)
     with ZipFile('pupflare-master.zip', 'r') as zip:
         zip.extractall()
     os.rename('pupflare-master', 'pupflare')
