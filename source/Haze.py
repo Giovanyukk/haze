@@ -14,11 +14,13 @@ from lxml import html
 from Naked.toolshed.shell import muterun_js
 from subprocess import call
 
+os.system('cls')  # Limpia la pantalla
+
 # Se inicializa el logger para el manejo de errores
 logging.basicConfig(filename='log.txt', level=logging.ERROR, format='%(asctime)s %(levelname)s %(name)s %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
 
-os.system('cls')  # Limpia la pantalla
-js = threading.Thread(target=muterun_js, args=('pupflare/index.js',), daemon=True)
+# Configura el thread que corre el script de puppeteer
+threading.Thread(target=muterun_js, args=('pupflare/index.js',), daemon=True).start()
 
 # Si no existe la carpeta database, la crea
 if(not os.path.exists('database')):
@@ -79,7 +81,6 @@ else:
     # Si no existe, crea una DataFrame temporal y al final la guarda en un archivo.
     dataBase = pd.DataFrame.from_dict(dataStructure)
 
-
 # Obtiene una lista de los precios mínimos de los cromos del juego.
 def priceList(appID):
     # Obtiene el link a los cromos de un juego.
@@ -113,59 +114,6 @@ def priceList(appID):
 # Transforma una lista de appIDs en un dataframe con los respectivos juegos.
 def toDataFrame(appID):
     global dataBase
-    # Si el primer appID es -1, se actualiza toda la lista.
-    if(appID[0] == -1):
-        if(dataBase['AppID'].tolist() != [] and os.path.isfile('database/main.csv')):
-            return toDataFrame(dataBase['AppID'].tolist())
-        else:
-            os.system('cls')
-            print('La base de datos no existe o está vacia.')
-            main()
-    # Si es -2, saca los appIDs del archivo steamdb.html ubicado en la carpeta database
-    if(appID[0] == -2):
-        # Se conecta al servidor para poder descargar el html
-        if(not js.is_alive()):
-            js.start()
-        with open('database/steamdb.html', 'w', encoding='utf-8') as f:
-            while(os.stat('database/steamdb.html').st_size < 10000):
-                f.write(requests.get('http://localhost:3000/?url=https://steamdb.info/sales/?max_price=16&min_reviews=0&min_rating=0&min_discount=0&cc=ar&category=29&displayOnly=Game').text)
-        with open('database/steamdb.html','r',encoding='utf-8') as htmlfile:
-            # Da la opcion de omitir los juegos que ya estan comprados
-            if(webAPIKey != "" and steamID64 != "" and (input('Omitir juegos que ya estan en mi biblioteca? (Y/n) ') or 'y') == "y"):
-                ownedGamesURL = "http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=" + webAPIKey + "&steamid=" + steamID64 + "&format=json"
-                gamesData = json.loads(session.get(ownedGamesURL).text)
-                ownedGamesList = [0] * len(gamesData['response']['games'])
-                for i in range(len(gamesData['response']['games'])):
-                    ownedGamesList[i] = int(gamesData['response']['games'][i]['appid'])
-                content = htmlfile.read()
-                tree = html.fromstring(content)
-                appidlist = tree.xpath('//tr[@data-appid]/@data-appid')
-                for i in ownedGamesList:
-                    if str(i) in appidlist:
-                        appidlist.remove(str(i))
-                return toDataFrame(appidlist)
-            else:
-                content = htmlfile.read()
-                tree = html.fromstring(content)
-                appidlist = tree.xpath('//tr[@data-appid]/@data-appid')
-                return toDataFrame(appidlist)
-    # Si es -3, borra el archivo main
-    if(appID[0] == -3):
-        if(os.path.isfile('database/main.csv')):
-            dataBase = pd.DataFrame.from_dict(dataStructure)
-            os.remove('database/main.csv')
-            try:
-                os.remove('database/main.xlsx')
-            except:
-                pass
-            os.system('cls')
-            print("Se eliminó la base de datos.")
-            main()
-        else:
-            os.system('cls')
-            print("No existe base de datos.")
-            main()
-
     # Crea una base de datos auxiliar.
     dataBaseAux = pd.DataFrame.from_dict(dataStructure)
     for i in range(len(appID)):
@@ -242,41 +190,10 @@ def toDataFrame(appID):
     print(dataBaseAux.drop(columns=['Lista de cromos', 'Ultima actualización']).sort_values('Retorno mínimo', ascending=False, ignore_index=True).head())
     return dataBaseAux
 
-def main():
+def saveDatabase():
     global dataBase
-    global storeSession
-    # AppIDs de los juegos a analizar.
-    print('Ingrese AppIDs separados por comas o una de las siguientes opciones:')
-    print('\t(-1) Actualización general')
-    print('\t(-2) Actualizar desde steamdb.info')
-    print('\t(-3) Eliminar base de datos')
-    print('\t(Enter) Salir')
-    appIDs = input('AppIDs:')
-    if (appIDs == ''):  # Si no se especifican appIDs
-        sys.exit()
-    # Separa el string de appIDs en un array
-    appID = [int(id) for id in appIDs.split(',')]
-
-    # Elimina los duplicados.
-    dataBase.drop_duplicates(subset='Nombre', keep='last',
-                             inplace=True, ignore_index=True)
-    # Se crea una sesion para hacer mas eficiente la conexion con el servidor
-    storeSession = requests.Session()
-    # Agrega los juegos a la base de datos.
-    try:
-        dataBase = dataBase.append(toDataFrame(appID), ignore_index=True)
-    # Si ocurre algun error, guarda los detalles en el archivo log.txt
-    except KeyboardInterrupt:
-        sys.exit()
-    except Exception as e:
-        logging.error(e)
-        sys.exit()
-    # Elimina los duplicados.
-    dataBase.drop_duplicates(subset='Nombre', keep='last',
-                             inplace=True, ignore_index=True)
-    # Ordena por retorno mínimo.
+    dataBase.drop_duplicates(subset='Nombre', keep='last', inplace=True, ignore_index=True)
     dataBase.sort_values('Retorno mínimo', ascending=False, inplace=True)
-    # Guarda todo en un archivo .csv para compatibilidad y un archivo .xlsx para mejor visualización.
     dataBase.to_csv('database/main.csv', index=False)
     excel_writer = pd.ExcelWriter('database/main.xlsx', engine='xlsxwriter')
     dataBase.to_excel(excel_writer, index=False, float_format='%.3f', encoding='cp1252', sheet_name='Cromos')
@@ -292,5 +209,74 @@ def main():
     worksheet.conditional_format('D2:D{}'.format(len(dataBase) + 1), {'type': '3_color_scale', 'min_type': 'num', 'mid_value': 0, 'mid_color': '#FFFFFF'})
     worksheet.conditional_format('E2:E{}'.format(len(dataBase) + 1), {'type': '3_color_scale', 'min_type': 'num', 'mid_value': 0, 'mid_color': '#FFFFFF'})
     excel_writer.save()
-    main()
-main()
+
+# Se crea una sesion para hacer mas eficiente la conexion con el servidor
+storeSession = requests.Session()
+
+menu = {}
+menu['1']="Actualización general" 
+menu['2']="Actualizar desde steamdb.info"
+menu['3']="Eliminar base de datos"
+menu['4']="Salir"
+
+try:
+    while(True):
+        print('Ingrese una de las siguientes opciones:')
+        for entry in list(menu.keys())[0:-1]:
+            print(f'\t({entry}) {menu[entry]}')
+        print('\t(Enter) Salir')
+
+        option = input('Opción: ')
+        if(option == '1'):
+            if(dataBase['AppID'].tolist() != [] and os.path.isfile('database/main.csv')):
+                dataBase = dataBase.append(toDataFrame(dataBase['AppID'].tolist()), ignore_index=True)
+                saveDatabase()
+            else:
+                os.system('cls')
+                print('La base de datos no existe o está vacia.')
+        elif(option == '2'):
+            with open('database/steamdb.html', 'w', encoding='utf-8') as f:
+                while(os.stat('database/steamdb.html').st_size < 10000):
+                    f.write(requests.get('http://localhost:3000/?url=https://steamdb.info/sales/?max_price=16&min_reviews=0&min_rating=0&min_discount=0&cc=ar&category=29&displayOnly=Game').text)
+            with open('database/steamdb.html','r',encoding='utf-8') as htmlfile:
+                # Da la opcion de omitir los juegos que ya estan comprados
+                if(webAPIKey != "" and steamID64 != "" and (input('Omitir juegos que ya estan en mi biblioteca? (Y/n) ') or 'y') == "y"):
+                    ownedGamesURL = "http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=" + webAPIKey + "&steamid=" + steamID64 + "&format=json"
+                    gamesData = json.loads(session.get(ownedGamesURL).text)
+                    ownedGamesList = [0] * len(gamesData['response']['games'])
+                    for i in range(len(gamesData['response']['games'])):
+                        ownedGamesList[i] = int(gamesData['response']['games'][i]['appid'])
+                    content = htmlfile.read()
+                    tree = html.fromstring(content)
+                    appidlist = tree.xpath('//tr[@data-appid]/@data-appid')
+                    for i in ownedGamesList:
+                        if str(i) in appidlist:
+                            appidlist.remove(str(i))
+                    dataBase = dataBase.append(toDataFrame(appidlist), ignore_index=True)
+                    saveDatabase()
+                else:
+                    content = htmlfile.read()
+                    tree = html.fromstring(content)
+                    appidlist = tree.xpath('//tr[@data-appid]/@data-appid')
+                    dataBase = dataBase.append(toDataFrame(appidlist), ignore_index=True)
+                    saveDatabase()
+        elif(option == '3'):
+            if(os.path.isfile('database/main.csv')):
+                dataBase = pd.DataFrame.from_dict(dataStructure)
+                os.remove('database/main.csv')
+                try:
+                    os.remove('database/main.xlsx')
+                except:
+                    pass
+                os.system('cls')
+                print("Se eliminó la base de datos.")
+            else:
+                os.system('cls')
+                print("No existe base de datos.")
+        else:
+            break
+except KeyboardInterrupt:
+    sys.exit()
+except Exception as e:
+    logging.error(e)
+    sys.exit()
