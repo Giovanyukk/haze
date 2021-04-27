@@ -20,7 +20,8 @@ os.system('cls')  # Limpia la pantalla
 logging.basicConfig(filename='log.txt', level=logging.ERROR, format='%(asctime)s %(levelname)s %(name)s %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
 
 # Configura el thread que corre el script de puppeteer
-threading.Thread(target=muterun_js, args=('pupflare/index.js',), daemon=True).start()
+js = threading.Thread(target=muterun_js, args=('pupflare/index.js',), daemon=True)
+js.start()
 
 # Si no existe la carpeta database, la crea
 if(not os.path.exists('database')):
@@ -275,6 +276,10 @@ try:
                 print("No existe base de datos.")
         else:
             break
+    try:
+        os.system('taskkill /f /im node.exe')
+    except:
+        pass
 except KeyboardInterrupt:
     sys.exit()
 except Exception as e:
