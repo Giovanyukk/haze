@@ -11,7 +11,7 @@ La autenticación en 2 factores puede automatizarse si se coloca el archivo de s
 
 ## Modo de uso
 
-El zip debe ser descomprimido en un directorio propio, ya que en este se guardarán los archivos de configuración y las bases de datos que se creen.
+El ejecutable debe ser colocado en un directorio propio, ya que en este se guardarán los archivos de configuración y la base de datos.
 
 En el primer uso se solicitara el nombre de usuario y contraseña de Steam, los cuales se guardaran en el archivo **user.json**. Si se desea iniciar sesión con otro usuario, este archivo debe ser eliminado.
 
