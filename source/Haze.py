@@ -190,8 +190,7 @@ def toDataFrame(appID):
     print(dataBaseAux.drop(columns=['Lista de cromos', 'Ultima actualización']).sort_values('Retorno mínimo', ascending=False, ignore_index=True).head())
     return dataBaseAux
 
-def saveDatabase():
-    global dataBase
+def saveDatabase(dataBase):
     dataBase.drop_duplicates(subset='Nombre', keep='last', inplace=True, ignore_index=True)
     dataBase.sort_values('Retorno mínimo', ascending=False, inplace=True)
     dataBase.to_csv('database/main.csv', index=False)
@@ -230,7 +229,7 @@ try:
         if(option == '1'):
             if(dataBase['AppID'].tolist() != [] and os.path.isfile('database/main.csv')):
                 dataBase = dataBase.append(toDataFrame(dataBase['AppID'].tolist()), ignore_index=True)
-                saveDatabase()
+                saveDatabase(dataBase)
             else:
                 os.system('cls')
                 print('La base de datos no existe o está vacia.')
@@ -253,13 +252,13 @@ try:
                         if str(i) in appidlist:
                             appidlist.remove(str(i))
                     dataBase = dataBase.append(toDataFrame(appidlist), ignore_index=True)
-                    saveDatabase()
+                    saveDatabase(dataBase)
                 else:
                     content = htmlfile.read()
                     tree = html.fromstring(content)
                     appidlist = tree.xpath('//tr[@data-appid]/@data-appid')
                     dataBase = dataBase.append(toDataFrame(appidlist), ignore_index=True)
-                    saveDatabase()
+                    saveDatabase(dataBase)
         elif(option == '3'):
             if(os.path.isfile('database/main.csv')):
                 dataBase = pd.DataFrame.from_dict(dataStructure)
