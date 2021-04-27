@@ -11,7 +11,7 @@ headers = ['Nombre', 'Precio', 'Retorno mínimo', 'Retorno medio', 'Retorno medi
 data_structure = {header: [] for header in headers}
 
 # Obtiene una lista de los precios mínimos de los cromos del juego.
-def priceList(appID, session):
+def get_price_list(appID, session):
     # Obtiene el link a los cromos de un juego.
     cards_URL = "https://steamcommunity.com/market/search/render/?l=spanish&currency=34&category_753_cardborder%5B%5D=tag_cardborder_0&category_753_item_class%5B%5D=tag_item_class_2&appid=753&norender=1&category_753_Game%5B%5D=tag_app_" + \
         str(appID)
@@ -41,7 +41,7 @@ def priceList(appID, session):
 
 
 # Transforma una lista de appIDs en un dataframe con los respectivos juegos.
-def toDataFrame(appID, session):
+def to_dataframe(appID, session):
     # Crea una base de datos auxiliar.
     database_aux = pd.DataFrame.from_dict(data_structure)
     for i in range(len(appID)):
@@ -62,7 +62,7 @@ def toDataFrame(appID, session):
             sleep(1)
         game_data = json.loads(response.text)
 
-        cards_prices = priceList(appID[i], session)  # Obtiene el precio de las cartas.
+        cards_prices = get_price_list(appID[i], session)  # Obtiene el precio de las cartas.
         if(len(appID) > 250):
             sleep(1)
 
@@ -118,7 +118,7 @@ def toDataFrame(appID, session):
     print(database_aux.drop(columns=['Lista de cromos', 'Ultima actualización']).sort_values('Retorno mínimo', ascending=False, ignore_index=True).head())
     return database_aux
 
-def saveDatabase(dataBase):
+def save_database(dataBase):
     dataBase.drop_duplicates(subset='Nombre', keep='last', inplace=True, ignore_index=True)
     dataBase.sort_values('Retorno mínimo', ascending=False, inplace=True)
     dataBase.to_csv('database/main.csv', index=False)

@@ -12,7 +12,7 @@ from subprocess import call
 from lxml import html
 from zipfile import ZipFile
 
-import functions as f # Funciones internas
+from functions import to_dataframe, save_database # Funciones internas
 
 os.system('cls')  # Limpia la pantalla
 
@@ -113,8 +113,8 @@ try:
         option = input('Opción: ')
         if(option == '1'):
             if(database['AppID'].tolist() != [] and os.path.isfile('database/main.csv')):
-                database = database.append(f.toDataFrame(database['AppID'].tolist(), session), ignore_index=True)
-                f.saveDatabase(database)
+                database = database.append(to_dataframe(database['AppID'].tolist(), session), ignore_index=True)
+                save_database(database)
             else:
                 os.system('cls')
                 print('La base de datos no existe o está vacia.')
@@ -125,25 +125,25 @@ try:
             with open('database/steamdb.html','r',encoding='utf-8') as htmlfile:
                 # Da la opcion de omitir los juegos que ya estan comprados
                 if(webAPIKey != "" and steamID64 != "" and (input('Omitir juegos que ya estan en mi biblioteca? (Y/n) ') or 'y') == "y"):
-                    ownedGamesURL = "http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=" + webAPIKey + "&steamid=" + steamID64 + "&format=json"
-                    gamesData = json.loads(session.get(ownedGamesURL).text)
-                    ownedGamesList = [0] * len(gamesData['response']['games'])
-                    for i in range(len(gamesData['response']['games'])):
-                        ownedGamesList[i] = int(gamesData['response']['games'][i]['appid'])
+                    owned_games_URL = "http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=" + webAPIKey + "&steamid=" + steamID64 + "&format=json"
+                    games_data = json.loads(session.get(owned_games_URL).text)
+                    owned_games_list = [0] * len(games_data['response']['games'])
+                    for i in range(len(games_data['response']['games'])):
+                        owned_games_list[i] = int(games_data['response']['games'][i]['appid'])
                     content = htmlfile.read()
                     tree = html.fromstring(content)
                     appidlist = tree.xpath('//tr[@data-appid]/@data-appid')
-                    for i in ownedGamesList:
+                    for i in owned_games_list:
                         if str(i) in appidlist:
                             appidlist.remove(str(i))
-                    database = database.append(f.toDataFrame(appidlist, session), ignore_index=True)
-                    f.saveDatabase(database)
+                    database = database.append(to_dataframe(appidlist, session), ignore_index=True)
+                    save_database(database)
                 else:
                     content = htmlfile.read()
                     tree = html.fromstring(content)
                     appidlist = tree.xpath('//tr[@data-appid]/@data-appid')
-                    database = database.append(f.toDataFrame(appidlist, session), ignore_index=True)
-                    f.saveDatabase(database)
+                    database = database.append(to_dataframe(appidlist, session), ignore_index=True)
+                    save_database(database)
         elif(option == '3'):
             if(os.path.isfile('database/main.csv')):
                 database = pd.DataFrame.from_dict(data_structure)
