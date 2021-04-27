@@ -1,18 +1,17 @@
+import os
+import sys
+import threading
+import logging
 import requests
 import json
 import numpy as np
 import pandas as pd
 import steam.webauth as wa
 import steam.guard as guard
-import os
-import sys
-import logging
-import threading
+from subprocess import call
 from time import sleep
 from datetime import datetime
 from lxml import html
-from Naked.toolshed.shell import muterun_js
-from subprocess import call
 
 os.system('cls')  # Limpia la pantalla
 
@@ -20,7 +19,7 @@ os.system('cls')  # Limpia la pantalla
 logging.basicConfig(filename='log.txt', level=logging.ERROR, format='%(asctime)s %(levelname)s %(name)s %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
 
 # Configura el thread que corre el script de puppeteer
-js = threading.Thread(target=muterun_js, args=('pupflare/index.js',), daemon=True)
+js = threading.Thread(target=call, args=('node pupflare/index.js',), daemon=True)
 js.start()
 
 # Si no existe la carpeta database, la crea
