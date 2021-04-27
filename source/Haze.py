@@ -5,20 +5,27 @@ import pandas as pd
 import steam.webauth as wa
 import steam.guard as guard
 import os
+import sys
+import logging
+import threading
 from time import sleep
 from datetime import datetime
 from lxml import html
-import sys
-import logging
+from Naked.toolshed.shell import muterun_js
+from subprocess import call
 
 # Se inicializa el logger para el manejo de errores
 logging.basicConfig(filename='log.txt', level=logging.ERROR, format='%(asctime)s %(levelname)s %(name)s %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
 
 os.system('cls')  # Limpia la pantalla
+js = threading.Thread(target=muterun_js, args=('pupflare/index.js',), daemon=True)
 
 # Si no existe la carpeta database, la crea
 if(not os.path.exists('database')):
     os.makedirs('database')
+
+if(not os.path.exists('pupflare/node_modules')):
+    call('npm install', cwd='pupflare', shell=True)
 
 # Variables de usuario
 username = ''
@@ -116,38 +123,41 @@ def toDataFrame(appID):
             main()
     # Si es -2, saca los appIDs del archivo steamdb.html ubicado en la carpeta database
     if(appID[0] == -2):
-        if(os.path.exists('database/steamdb.html')):
-            with open('database/steamdb.html','r',encoding='utf-8') as htmlfile:
-                # Da la opcion de omitir los juegos que ya estan comprados
-                if(webAPIKey != "" and steamID64 != "" and (input('Omitir juegos que ya estan en mi biblioteca? (Y/n) ') or 'y') == "y"):
-                    ownedGamesURL = "http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=" + webAPIKey + "&steamid=" + steamID64 + "&format=json"
-                    gamesData = json.loads(session.get(ownedGamesURL).text)
-                    ownedGamesList = [0] * len(gamesData['response']['games'])
-                    for i in range(len(gamesData['response']['games'])):
-                        ownedGamesList[i] = int(gamesData['response']['games'][i]['appid'])
-                    content = htmlfile.read()
-                    tree = html.fromstring(content)
-                    appidlist = tree.xpath('//tr[@data-appid]/@data-appid')
-                    for i in ownedGamesList:
-                        if str(i) in appidlist:
-                            appidlist.remove(str(i))
-                    return toDataFrame(appidlist)
-                else:
-                    content = htmlfile.read()
-                    tree = html.fromstring(content)
-                    appidlist = tree.xpath('//tr[@data-appid]/@data-appid')
-                    return toDataFrame(appidlist)
-        else:
-            os.system('cls')
-            print("No existe el archivo steamdb.html. Debe descargarlo y ubicarlo en la carpeta 'database'.")
-            main()
+        # Se conecta al servidor para poder descargar el html
+        if(not js.is_alive()):
+            js.start()
+        with open('database/steamdb.html', 'w', encoding='utf-8') as f:
+            while(os.stat('database/steamdb.html').st_size < 10000):
+                f.write(requests.get('http://localhost:3000/?url=https://steamdb.info/sales/?max_price=16&min_reviews=0&min_rating=0&min_discount=0&cc=ar&category=29&displayOnly=Game').text)
+        with open('database/steamdb.html','r',encoding='utf-8') as htmlfile:
+            # Da la opcion de omitir los juegos que ya estan comprados
+            if(webAPIKey != "" and steamID64 != "" and (input('Omitir juegos que ya estan en mi biblioteca? (Y/n) ') or 'y') == "y"):
+                ownedGamesURL = "http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=" + webAPIKey + "&steamid=" + steamID64 + "&format=json"
+                gamesData = json.loads(session.get(ownedGamesURL).text)
+                ownedGamesList = [0] * len(gamesData['response']['games'])
+                for i in range(len(gamesData['response']['games'])):
+                    ownedGamesList[i] = int(gamesData['response']['games'][i]['appid'])
+                content = htmlfile.read()
+                tree = html.fromstring(content)
+                appidlist = tree.xpath('//tr[@data-appid]/@data-appid')
+                for i in ownedGamesList:
+                    if str(i) in appidlist:
+                        appidlist.remove(str(i))
+                return toDataFrame(appidlist)
+            else:
+                content = htmlfile.read()
+                tree = html.fromstring(content)
+                appidlist = tree.xpath('//tr[@data-appid]/@data-appid')
+                return toDataFrame(appidlist)
     # Si es -3, borra el archivo main
     if(appID[0] == -3):
         if(os.path.isfile('database/main.csv')):
             dataBase = pd.DataFrame.from_dict(dataStructure)
             os.remove('database/main.csv')
-            if(os.path.isfile('database/main.xlsx')):
+            try:
                 os.remove('database/main.xlsx')
+            except:
+                pass
             os.system('cls')
             print("Se eliminó la base de datos.")
             main()
@@ -238,12 +248,12 @@ def main():
     # AppIDs de los juegos a analizar.
     print('Ingrese AppIDs separados por comas o una de las siguientes opciones:')
     print('\t(-1) Actualización general')
-    print('\t(-2) Utilizar archivo steamdb.html')
+    print('\t(-2) Actualizar desde steamdb.info')
     print('\t(-3) Eliminar base de datos')
     print('\t(Enter) Salir')
     appIDs = input('AppIDs:')
     if (appIDs == ''):  # Si no se especifican appIDs
-        sys.exit()  # Termina el programa
+        sys.exit()
     # Separa el string de appIDs en un array
     appID = [int(id) for id in appIDs.split(',')]
 
