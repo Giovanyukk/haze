@@ -101,6 +101,8 @@ menu['2']="Actualizar desde steamdb.info"
 menu['3']="Eliminar base de datos"
 menu['4']="Salir"
 
+os.system('cls')  # Limpia la pantalla
+
 try:
     while(True):
         print('Ingrese una de las siguientes opciones:')
