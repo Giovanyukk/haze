@@ -124,6 +124,7 @@ def to_dataframe(appID, session):
     return database_aux
 
 
+# Genera los archivos .csv y .xlsx
 def save_database(database):
     # Se eliminan los duplicados de la base de datos, se ordenan por retorno minimo y se guarda el .csv
     database.drop_duplicates(subset='Nombre', keep='last',
@@ -140,7 +141,7 @@ def save_database(database):
         max_len = max((
             series.astype(str).map(len).max(),  # Ancho del item mas grande
             len(str(series.name))  # Ancho del nombre de la columna
-            )) + 1  # Espacio extra
+        )) + 1  # Espacio extra
         # Se establece el ancho de la columna
         worksheet.set_column(idx, idx, max_len)
     worksheet.conditional_format('C2:C{}'.format(len(
@@ -151,3 +152,18 @@ def save_database(database):
         database) + 1), {'type': '3_color_scale', 'min_type': 'num', 'mid_value': 0, 'mid_color': '#FFFFFF'})
     # Se guarda el .xlsx
     excel_writer.save()
+
+
+# Elimina los archivos .csv y .xlsx
+def delete_database():
+    if(os.path.isfile('database/main.csv')):
+        os.remove('database/main.csv')
+        try:
+            os.remove('database/main.xlsx')
+        except:
+            pass
+        os.system('cls')
+        print('Se eliminó la base de datos.')
+    else:
+        os.system('cls')
+        print('No existe base de datos.')

@@ -13,7 +13,7 @@ import steam.webauth as wa
 import steam.guard as guard
 from lxml import html
 
-from functions import to_dataframe, save_database
+from functions import to_dataframe, save_database, delete_database
 
 os.system('cls')
 
@@ -125,6 +125,8 @@ try:
                 os.system('cls')
                 print('La base de datos no existe o está vacia.')
         elif(option == '2'):
+            delete_database()
+            database = pd.DataFrame.from_dict(data_structure)
             with open('database/steamdb.html', 'w', encoding='utf-8') as f:
                 while(os.stat('database/steamdb.html').st_size < 10000):
                     f.write(requests.get(
@@ -157,18 +159,8 @@ try:
                         appidlist, session), ignore_index=True)
                     save_database(database)
         elif(option == '3'):
-            if(os.path.isfile('database/main.csv')):
-                database = pd.DataFrame.from_dict(data_structure)
-                os.remove('database/main.csv')
-                try:
-                    os.remove('database/main.xlsx')
-                except:
-                    pass
-                os.system('cls')
-                print('Se eliminó la base de datos.')
-            else:
-                os.system('cls')
-                print('No existe base de datos.')
+            delete_database()
+            database = pd.DataFrame.from_dict(data_structure)
         else:
             break
     # Se intenta forzar el cierre del proceso de Node.js. Esto evita que se cuelgue el programa
