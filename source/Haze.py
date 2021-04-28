@@ -176,7 +176,7 @@ try:
         os.system('taskkill /f /im node.exe')
     except:
         pass
-# Salvo que el programa se cierra de forma inesperada, se guardan los detalles en el logger antes de cerrarse
+# Salvo que el programa se cierre de forma inesperada, se guardan los detalles en el logger antes de cerrarse
 except KeyboardInterrupt:
     sys.exit()
 except Exception as e:
