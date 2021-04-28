@@ -2,15 +2,16 @@ import os
 import sys
 import threading
 import logging
-import requests
 import json
+from subprocess import call
+from zipfile import ZipFile
+
+import requests
 import numpy as np
 import pandas as pd
 import steam.webauth as wa
 import steam.guard as guard
-from subprocess import call
 from lxml import html
-from zipfile import ZipFile
 
 from functions import to_dataframe, save_database  # Funciones internas
 
@@ -100,10 +101,10 @@ else:
 
 # Entradas del menu principal
 menu = {}
-menu['1'] = "Actualización general"
-menu['2'] = "Actualizar desde steamdb.info"
-menu['3'] = "Eliminar base de datos"
-menu['4'] = "Salir"
+menu['1'] = 'Actualización general'
+menu['2'] = 'Actualizar desde steamdb.info'
+menu['3'] = 'Eliminar base de datos'
+menu['4'] = 'Salir'
 
 os.system('cls')  # Limpia la pantalla
 
@@ -130,9 +131,9 @@ try:
                         'http://localhost:3000/?url=https://steamdb.info/sales/?max_price=16&min_reviews=0&min_rating=0&min_discount=0&cc=ar&category=29&displayOnly=Game').text)
             with open('database/steamdb.html', 'r', encoding='utf-8') as htmlfile:
                 # Da la opcion de omitir los juegos que ya estan comprados
-                if(webAPIKey != "" and steamID64 != "" and (input('Omitir juegos que ya estan en mi biblioteca? (Y/n) ') or 'y') == "y"):
-                    owned_games_URL = "http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=" + \
-                        webAPIKey + "&steamid=" + steamID64 + "&format=json"
+                if(webAPIKey != '' and steamID64 != '' and (input('Omitir juegos que ya estan en mi biblioteca? (Y/n) ') or 'y') == 'y'):
+                    owned_games_URL = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=' + \
+                        webAPIKey + '&steamid=' + steamID64 + '&format=json'
                     games_data = json.loads(session.get(owned_games_URL).text)
                     owned_games_list = [0] * \
                         len(games_data['response']['games'])
@@ -164,10 +165,10 @@ try:
                 except:
                     pass
                 os.system('cls')
-                print("Se eliminó la base de datos.")
+                print('Se eliminó la base de datos.')
             else:
                 os.system('cls')
-                print("No existe base de datos.")
+                print('No existe base de datos.')
         else:
             break
     try:
