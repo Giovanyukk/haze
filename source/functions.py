@@ -1,9 +1,10 @@
 import os
 import json
-import numpy as np
-import pandas as pd
 from time import sleep
 from datetime import datetime
+
+import numpy as np
+import pandas as pd
 
 headers = ['Nombre', 'Precio', 'Retorno mínimo', 'Retorno medio', 'Retorno mediano',
            'AppID', 'Lista de cromos', 'Ultima actualización']  # Nombres de las columnas.
@@ -14,7 +15,7 @@ data_structure = {header: [] for header in headers}
 # Obtiene una lista de los precios mínimos de los cromos del juego.
 def get_price_list(appID, session):
     # Obtiene el link a los cromos de un juego.
-    cards_URL = "https://steamcommunity.com/market/search/render/?l=spanish&currency=34&category_753_cardborder%5B%5D=tag_cardborder_0&category_753_item_class%5B%5D=tag_item_class_2&appid=753&norender=1&category_753_Game%5B%5D=tag_app_" + \
+    cards_URL = 'https://steamcommunity.com/market/search/render/?l=spanish&currency=34&category_753_cardborder%5B%5D=tag_cardborder_0&category_753_item_class%5B%5D=tag_item_class_2&appid=753&norender=1&category_753_Game%5B%5D=tag_app_' + \
         str(appID)
     responses = session.get(cards_URL)
     # Si falla la solicitud, reintenta cada 5 segundos.
@@ -47,7 +48,7 @@ def to_dataframe(appID, session):
     database_aux = pd.DataFrame.from_dict(data_structure)
     for i in range(len(appID)):
         # Obtiene el link al juego.
-        store_URL = "https://store.steampowered.com/api/appdetails?cc=ar&appids=" + \
+        store_URL = 'https://store.steampowered.com/api/appdetails?cc=ar&appids=' + \
             str(appID[i])
         # Envia una solicitud al servidor para obtener los datos del juego.
         response = session.get(store_URL)
@@ -56,7 +57,7 @@ def to_dataframe(appID, session):
             os.system('cls')
             print('Error, reintentando en 5 segundos...')
             sleep(5)
-            os.system("cls")
+            os.system('cls')
             response = session.get(store_URL)
 
         if(len(appID) > 250):
