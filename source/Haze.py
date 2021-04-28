@@ -13,19 +13,19 @@ import steam.webauth as wa
 import steam.guard as guard
 from lxml import html
 
-from functions import to_dataframe, save_database  # Funciones internas
+from functions import to_dataframe, save_database
 
-os.system('cls')  # Limpia la pantalla
+os.system('cls')
 
 # Se inicializa el logger para el manejo de errores
 logging.basicConfig(filename='log.txt', level=logging.ERROR,
                     format='%(asctime)s %(levelname)s %(name)s %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
 
-# Si no existe la carpeta database, la crea
+# Si no existe la carpeta database, se crea
 if(not os.path.exists('database')):
     os.makedirs('database')
 
-# Si no existe la carpeta pupflare, la descarga e instala el script
+# Si no existe la carpeta pupflare, se descarga e instala el script
 if(not os.path.exists('pupflare')):
     download_link = 'https://github.com/unixfox/pupflare/archive/refs/heads/master.zip'
     r = requests.get(download_link, allow_redirects=True)
@@ -39,7 +39,7 @@ if(not os.path.exists('pupflare')):
     os.remove('pupflare/Dockerfile')
     call('npm install', cwd='pupflare', shell=True)
 
-# Configura el thread que corre el script de puppeteer
+# Se configura el thread que ejecuta el script de puppeteer
 js = threading.Thread(target=call, args=(
     'node pupflare/index.js',), daemon=True)
 js.start()
@@ -50,7 +50,7 @@ password = ''
 webAPIKey = ''  # https://steamcommunity.com/dev/apikey
 steamID64 = ''  # https://steamidfinder.com/
 
-# Detecta si existe un archivo de configuracion, utilizándolo en tal caso o creando uno en caso contrario
+# Se detecta si existe un archivo de configuracion, utilizándolo en tal caso o creando uno en caso contrario
 if (os.path.isfile('user.json')):
     try:
         with open('user.json', 'r', encoding='utf-8') as usercfg:
@@ -73,30 +73,30 @@ else:
                 'key': '', 'steamID64': ''}
         json.dump(data, usercfg)
 
-# Intenta iniciar sesión. Si existe el archivo 2FA.maFile, genera el código 2FA automaticamente
+# Se intenta iniciar sesión. Si existe el archivo 2FA.maFile, se genera el código 2FA automaticamente
 user = wa.WebAuth(username)
 if(os.path.isfile('2FA.maFile')):
     with open('2Fa.maFile', 'r') as f:
         data = json.load(f)
-    # La sesion se guarda en una variable para poder usarse posteriormente para las solicitudes
+    # La sesion se guarda en una variable para poder usarse posteriormente en las requests
     session = user.cli_login(
         password, twofactor_code=guard.SteamAuthenticator(secrets=data).get_code())
 else:
     session = user.cli_login(password)
 
-# Centra los headers de la DataFrame.
+# Se centran los headers de la dataframe
 pd.set_option('colheader_justify', 'center')
 headers = ['Nombre', 'Precio', 'Retorno mínimo', 'Retorno medio', 'Retorno mediano',
-           'AppID', 'Lista de cromos', 'Ultima actualización']  # Nombres de las columnas.
-# Crea un diccionario con la estructura de la base de datos.
+           'AppID', 'Lista de cromos', 'Ultima actualización']  # Nombres de las columnas
+# Se crea un diccionario con la estructura de la base de datos
 data_structure = {header: [] for header in headers}
 
-# Verifica si existe una base de datos en formato .csv.
+# Se verifica si existe una base de datos en formato .csv
 if (os.path.isfile('database/main.csv')):
-    # Si existe, carga el .csv como un DataFrame.
+    # Si existe, se carga el .csv como un dataframe
     database = pd.read_csv('database/main.csv')
 else:
-    # Si no existe, crea una DataFrame temporal
+    # Si no existe, se crea una dataframe temporal
     database = pd.DataFrame.from_dict(data_structure)
 
 # Entradas del menu principal
@@ -106,7 +106,7 @@ menu['2'] = 'Actualizar desde steamdb.info'
 menu['3'] = 'Eliminar base de datos'
 menu['4'] = 'Salir'
 
-os.system('cls')  # Limpia la pantalla
+os.system('cls')
 
 try:
     while(True):
@@ -171,10 +171,12 @@ try:
                 print('No existe base de datos.')
         else:
             break
+    # Se intenta forzar el cierre del proceso de Node.js. Esto evita que se cuelgue el programa
     try:
         os.system('taskkill /f /im node.exe')
     except:
         pass
+# Salvo que el programa se cierra de forma inesperada, se guardan los detalles en el logger antes de cerrarse
 except KeyboardInterrupt:
     sys.exit()
 except Exception as e:
