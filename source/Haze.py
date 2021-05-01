@@ -137,17 +137,11 @@ try:
                     owned_games_URL = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=' + \
                         webAPIKey + '&steamid=' + steamID64 + '&format=json'
                     games_data = json.loads(session.get(owned_games_URL).text)
-                    owned_games_list = [0] * \
-                        len(games_data['response']['games'])
-                    for i in range(len(games_data['response']['games'])):
-                        owned_games_list[i] = int(
-                            games_data['response']['games'][i]['appid'])
+                    owned_games_list = [int(games_data['response']['games'][i]['appid']) for i in range(len(games_data['response']['games']))]
                     content = htmlfile.read()
                     tree = html.fromstring(content)
                     appidlist = tree.xpath('//tr[@data-appid]/@data-appid')
-                    for i in owned_games_list:
-                        if str(i) in appidlist:
-                            appidlist.remove(str(i))
+                    appidlist = [x for x in appidlist if x not in owned_games_list]
                     database = database.append(to_dataframe(
                         appidlist, session), ignore_index=True)
                     save_database(database)
