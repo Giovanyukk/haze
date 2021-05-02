@@ -12,8 +12,8 @@ headers = ['Nombre', 'Precio', 'Retorno mínimo', 'Retorno medio', 'Retorno medi
 data_structure = {header: [] for header in headers}
 
 
-# Obtiene una lista de los precios mínimos de los cromos del juego
 def get_price_list(appID, session):
+    '''Obtener una lista de los precios mínimos de los cromos del juego'''
     # Link a los cromos de un juego.
     cards_URL = 'https://steamcommunity.com/market/search/render/?l=spanish&currency=34&category_753_cardborder%5B%5D=tag_cardborder_0&category_753_item_class%5B%5D=tag_item_class_2&appid=753&norender=1&category_753_Game%5B%5D=tag_app_' + \
         str(appID)
@@ -42,8 +42,8 @@ def get_price_list(appID, session):
     return np.sort(cards_prices)
 
 
-# Transforma una lista de appIDs en un dataframe con los respectivos juegos
 def to_dataframe(appID, session):
+    '''Transformar una lista de appIDs en un dataframe con los respectivos juegos y retornarlo'''
     # Se crea una base de datos auxiliar
     database_aux = pd.DataFrame.from_dict(data_structure)
     for i in range(len(appID)):
@@ -124,8 +124,8 @@ def to_dataframe(appID, session):
     return database_aux
 
 
-# Genera los archivos .csv y .xlsx
 def save_database(database):
+    '''Generar los archivos .csv y .xlsx'''
     # Se eliminan los duplicados de la base de datos, se ordenan por retorno minimo y se guarda el .csv
     database.drop_duplicates(subset='Nombre', keep='last',
                              inplace=True, ignore_index=True)
@@ -154,8 +154,8 @@ def save_database(database):
     excel_writer.save()
 
 
-# Elimina los archivos .csv y .xlsx
 def delete_database():
+    '''Eliminar los archivos .csv y .xlsx'''
     if(os.path.isfile('database/main.csv')):
         os.remove('database/main.csv')
         try:
