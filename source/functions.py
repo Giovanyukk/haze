@@ -100,8 +100,12 @@ def get_appid_list(maxprice=16):
             y.rstrip() for y in price_list] if x not in ['']]
         price_list = [float(x) if x != '' else 0 for x in price_list]
         if any(float(x) > 16 for x in price_list):
-            appid_list += tree.xpath('//a[@data-ds-appid]/@data-ds-appid')[
-                :price_list.index(next(filter(lambda x: x > maxprice, price_list), None)) + 1]
+            try:
+                appid_list += tree.xpath('//a[@data-ds-appid]/@data-ds-appid')[
+                    :price_list.index(next(filter(lambda x: x > maxprice, price_list), None)) + 1]
+            except:
+                appid_list += tree.xpath('//a[@data-ds-appid]/@data-ds-appid')[
+                    :price_list.index(next(filter(lambda x: x > maxprice, price_list), None))]
             break
         appid_list += tree.xpath('//a[@data-ds-appid]/@data-ds-appid')
         i += 1
