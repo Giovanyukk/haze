@@ -1,10 +1,8 @@
 import os
-import json
-from time import sleep
-from datetime import datetime
 
-import numpy as np
 import pandas as pd
+
+from classes import Game
 
 headers = ['Nombre', 'Precio', 'Retorno mínimo', 'Retorno medio', 'Retorno mediano',
            'AppID', 'Lista de cromos', 'Ultima actualización']  # Nombres de las columnas
@@ -12,116 +10,33 @@ headers = ['Nombre', 'Precio', 'Retorno mínimo', 'Retorno medio', 'Retorno medi
 data_structure = {header: [] for header in headers}
 
 
-def get_price_list(appID, session):
-    '''Obtener una lista de los precios mínimos de los cromos del juego'''
-    # Link a los cromos de un juego.
-    cards_URL = 'https://steamcommunity.com/market/search/render/?l=spanish&currency=34&category_753_cardborder%5B%5D=tag_cardborder_0&category_753_item_class%5B%5D=tag_item_class_2&appid=753&norender=1&category_753_Game%5B%5D=tag_app_' + \
-        str(appID)
-    responses = session.get(cards_URL)
-    # Si falla la solicitud, reintenta cada 5 segundos
-    while(responses.status_code != 200):
-        os.system('cls')
-        print('Error, reintentando en 5 segundos...')
-        sleep(5)
-        os.system('cls')
-        responses = session.get(cards_URL)
-
-    cards_data = json.loads(responses.text)
-    # Si no existen cromos, retorna 0 para evitar un error
-    if(cards_data['total_count'] == 0):
-        return [0]
-    # Genera una array de ceros con la misma longitud que la cantidad de cromos
-    cards_prices = np.zeros(len(cards_data['results']))
-
-    for i in range(len(cards_data['results'])):
-        # Obtiene el valor de la i-ésima carta y limpia el string para sólo obtener el valor numérico
-        lowest_price = cards_data['results'][i]['sell_price_text'][5:]
-        cards_prices[i] = float(lowest_price.replace(',', '.'))
-
-    # Retorna la lista de los cromos en orden ascendente
-    return np.sort(cards_prices)
-
-
 def to_dataframe(appID, session):
     '''Transformar una lista de appIDs en un dataframe con los respectivos juegos y retornarlo'''
     # Se crea una base de datos auxiliar
-    database_aux = pd.DataFrame.from_dict(data_structure)
+    database = pd.DataFrame.from_dict(data_structure)
     for i in range(len(appID)):
-        # Link al juego
-        store_URL = 'https://store.steampowered.com/api/appdetails?cc=ar&appids=' + \
-            str(appID[i])
-        response = session.get(store_URL)
-        # Si falla la solicitud, reintenta cada 5 segundos
-        while(response.status_code != 200):
-            os.system('cls')
-            print('Error, reintentando en 5 segundos...')
-            sleep(5)
-            os.system('cls')
-            response = session.get(store_URL)
-
-        # Si la cantidad de appIDs ingresadas es mayor a 250, se reducen las requests por segundo para evitar error 503
-        if(len(appID) > 250):
-            sleep(1)
-        game_data = json.loads(response.text)
-        # Obtiene el precio de los cromos
-        cards_prices = get_price_list(appID[i], session)
-        if(len(appID) > 250):
-            sleep(1)
-
-        # Obtiene el nombre del juego
-        game_name = game_data[str(appID[i])]['data']['name']
-        # Detecta si el juego es gratis o no
-        is_free = game_data[str(appID[i])]['data']['is_free']
-        # Inicializa la variable data_array
-        data_array = []
-
-        if (len(cards_prices) != 0):  # Si el juego posee cromos...
-            # Obtiene la cantidad de los cromos que se dropean del juego
-            cards_dropped = 3 if len(
-                cards_prices) == 5 else len(cards_prices)//2
-            # Calcula la media de los precios de los cromos
-            average_price = np.average(cards_prices)
-            # Calcula la mediana de los precios de los cromos
-            median_price = np.median(cards_prices)
-
-            if is_free:  # Si el juego es gratis...
-                # Arma un array de arrays unidimensionales con los datos que se van a agregar
-                data_array = [[game_name], [0], [0], [0], [0], [str(appID[i])], [cards_prices], [
-                    datetime.now().strftime('%d/%m/%y %H:%M')]]
-            else:
-                # Obtiene el precio del juego en centavos
-                game_price = game_data[str(
-                    appID[i])]['data']['price_overview']['final']
-                # Calcula el retorno mínimo
-                minimum_profit = (
-                    (cards_prices[0] * cards_dropped * 0.8696 / (game_price / 100)) - 1)
-                # Calcula el retorno medio
-                average_profit = (
-                    (average_price * cards_dropped * 0.8696 / (game_price / 100)) - 1)
-                # Calcula el retorno mediano
-                median_profit = ((median_price * cards_dropped *
-                                 0.8696 / (game_price / 100)) - 1)
-                # Arma un array de arrays unidimensionales con los datos que se van a agregar
-                data_array = [[game_name], [game_price / 100], [round(minimum_profit, 3)], [round(average_profit, 3)], [
-                    round(median_profit, 3)], [str(appID[i])], [cards_prices], [datetime.now().strftime('%d/%m/%y %H:%M')]]
+        game = Game(appID[i], session)
+        # Arma un array de arrays unidimensionales con los datos que se van a agregar
+        game_data = [[game.name], [game.price], [game.min_profit], [game.avg_profit], [
+            game.med_profit], [game.appID], [game.card_list], [game.last_updated]]
 
         # Crea un dataframe con los datos para poder agregarlos
-        games_data = pd.DataFrame.from_dict(
-            {headers[j]: data_array[j] for j in range(len(data_array))})
+        game_df = pd.DataFrame.from_dict(
+            {headers[j]: game_data[j] for j in range(len(game_data))})
         # Agrega el i-ésimo juego a la base de datos auxiliar
-        database_aux = database_aux.append(games_data, ignore_index=True)
+        database = database.append(game_df, ignore_index=True)
 
         os.system('cls')
         # Imprime el número de juego / número de juegos totales
         print(f'{str(i+1)}/{str(len(appID))}')
         # Imprime la información del juego siendo analizado actualmente
-        games_data.drop(columns=['Lista de cromos',
-                        'Ultima actualización'], inplace=True)
-        print(games_data)
+        game_df.drop(columns=['Lista de cromos',
+                              'Ultima actualización'], inplace=True)
+        print(game_df)
     os.system('cls')
-    print(database_aux.drop(columns=['Lista de cromos', 'Ultima actualización']).sort_values(
+    print(database.drop(columns=['Lista de cromos', 'Ultima actualización']).sort_values(
         'Retorno mínimo', ascending=False, ignore_index=True).head())
-    return database_aux
+    return database
 
 
 def save_database(database):
