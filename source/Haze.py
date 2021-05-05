@@ -5,8 +5,8 @@ import json
 
 import pandas as pd
 
-from functions import to_dataframe, save_database, delete_database, get_appid_list
-from classes import User
+from source.functions import to_dataframe, save_database, delete_database, get_appid_list
+from source.classes import User
 
 os.system('cls')
 
