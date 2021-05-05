@@ -8,8 +8,6 @@ from zipfile import ZipFile
 
 import requests
 import pandas as pd
-import steam.webauth as wa
-import steam.guard as guard
 from lxml import html
 
 from functions import to_dataframe, save_database, delete_database
