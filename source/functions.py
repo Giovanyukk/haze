@@ -1,6 +1,8 @@
 import os
+import requests
 
 import pandas as pd
+from lxml import html
 
 from classes import Game
 
@@ -82,3 +84,25 @@ def delete_database():
     else:
         os.system('cls')
         print('No existe base de datos.')
+
+
+def get_appid_list(maxprice=16):
+    appid_list = []
+    i = 1
+    while(True):
+        page = requests.get(
+            f'https://store.steampowered.com/search/results/?query&start=0&count=200&dynamic_data=&sort_by=Price_ASC&ignore_preferences=1&maxprice=70&category1=998&category2=29&snr=1_7_7_2300_7&specials=1&infinite=0&page={i}')
+        tree = html.fromstring(page.content)
+        price_list = tree.xpath(
+            '//div[@class="col search_price discounted responsive_secondrow"]/text()')
+        price_list = [x[5:].replace(',', '.') for x in [
+            y.rstrip() for y in price_list] if x not in ['']]
+        price_list = [float(x) if x != '' else 0 for x in price_list]
+        if any(float(x) > 16 for x in price_list):
+            appid_list += tree.xpath('//a[@data-ds-appid]/@data-ds-appid')[
+                :price_list.index(next(filter(lambda x: x > 16, price_list), None))]
+            break
+        appid_list += tree.xpath('//a[@data-ds-appid]/@data-ds-appid')
+        i += 1
+    appid_list = [x for x in appid_list if not ',' in x]
+    return appid_list
