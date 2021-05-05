@@ -31,7 +31,7 @@ def to_dataframe(appID, session):
         print(f'{str(i+1)}/{str(len(appID))}')
         # Imprime la información del juego siendo analizado actualmente
         game_df.drop(columns=['Lista de cromos',
-                        'Ultima actualización'], inplace=True)
+                              'Ultima actualización'], inplace=True)
         print(game_df)
     os.system('cls')
     print(database.drop(columns=['Lista de cromos', 'Ultima actualización']).sort_values(
