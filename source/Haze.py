@@ -96,8 +96,10 @@ try:
                 # Da la opcion de omitir los juegos que ya estan comprados
                 if(user.webAPIKey != '' and (input('Omitir juegos que ya estan en mi biblioteca? (Y/n) ') or 'y') == 'y'):
                     owned_games_URL = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=' + \
-                        user.webAPIKey + '&steamid=' + str(user.steamID64) + '&format=json'
-                    games_data = json.loads(user.session.get(owned_games_URL).text)
+                        user.webAPIKey + '&steamid=' + \
+                        str(user.steamID64) + '&format=json'
+                    games_data = json.loads(
+                        user.session.get(owned_games_URL).text)
                     owned_games_list = [int(games_data['response']['games'][x]['appid']) for x in range(
                         len(games_data['response']['games']))]
                     content = htmlfile.read()

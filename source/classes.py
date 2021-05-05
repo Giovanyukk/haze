@@ -110,6 +110,7 @@ class Game:
 class User:
     '''Crear un objeto usuario donde se almacenan los datos del mismo.
     El inicio de sesion es automático'''
+
     def __init__(self, username='', password='', dir='user.json'):
         self.username = username
         self.password = password
@@ -117,7 +118,7 @@ class User:
         self.webAPIKey = ''
         self.session = ''
         self.logged_on = False
-        
+
         if(os.path.isfile(dir)):
             self.load(dir)
         else:
@@ -130,7 +131,8 @@ class User:
                 self.username = data['username']
                 self.password = data['password']
                 self.steamID64 = data['steamID64']
-                self.webAPIKey = data['key']  # https://steamcommunity.com/dev/apikey
+                # https://steamcommunity.com/dev/apikey
+                self.webAPIKey = data['key']
                 self.login()
         except:
             print(
@@ -140,8 +142,10 @@ class User:
         with open(dir, 'w', encoding='utf-8') as usercfg:
             print('Se creará un archivo de configuracion en el directorio del programa')
             print('Para poder omitir los juegos ya comprados al agregar juegos desde steamdb.info, deberá agregar su Steam API Key al archivo de configuración')
-            self.username = input('Ingrese su nombre de usuario: ') if self.username == '' else self.username
-            self.password = input('Ingrese su contraseña: ') if self.password == '' else self.password
+            self.username = input(
+                'Ingrese su nombre de usuario: ') if self.username == '' else self.username
+            self.password = input(
+                'Ingrese su contraseña: ') if self.password == '' else self.password
             self.login()
             data = {'username': self.username,
                     'password': self.password,
@@ -159,7 +163,7 @@ class User:
                 self.password, twofactor_code=guard.SteamAuthenticator(secrets=data).get_code())
         else:
             self.session = user.cli_login(self.password)
-        
+
         if user.logged_on:
             self.steamID64 = user.steam_id.as_64
             self.logged_on = True
