@@ -61,8 +61,6 @@ class Game:
         average_price = np.average(self.card_list)
         # Calcula la mediana de los precios de los cromos
         median_price = np.median(self.card_list)
-        # Se actualiza el campo 'Ultima Actualizacion'
-        self.last_updated = datetime.now().strftime('%d/%m/%y %H:%M')
 
         if(not is_free):
             # Obtiene el precio del juego en centavos
@@ -78,21 +76,24 @@ class Game:
             self.med_profit = round(((median_price * cards_dropped *
                                       0.8696 / (self.price)) - 1), 3)
 
+        # Se actualiza el campo 'Ultima Actualizacion'
+        self.last_updated = datetime.now().strftime('%d/%m/%y %H:%M')
+
     def get_price_list(self):
         '''Obtener una lista de los precios mínimos de los cromos del juego'''
         # Link a los cromos de un juego.
         cards_URL = 'https://steamcommunity.com/market/search/render/?l=spanish&currency=34&category_753_cardborder%5B%5D=tag_cardborder_0&category_753_item_class%5B%5D=tag_item_class_2&appid=753&norender=1&category_753_Game%5B%5D=tag_app_' + \
             str(self.appID)
-        responses = self.session.get(cards_URL)
+        response = self.session.get(cards_URL)
         # Si falla la solicitud, reintenta cada 5 segundos
-        while(responses.status_code != 200):
+        while(response.status_code != 200):
             os.system('cls')
             print('Error al actualizar el juego. Reintentando en 5 segundos...')
             sleep(5)
             os.system('cls')
-            responses = self.session.get(cards_URL)
+            response = self.session.get(cards_URL)
 
-        cards_data = json.loads(responses.text)
+        cards_data = json.loads(response.text)
         # Si no existen cromos, retorna 0 para evitar un error
         if(cards_data['total_count'] == 0):
             return [0]
