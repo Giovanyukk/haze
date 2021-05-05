@@ -2,6 +2,7 @@ import os
 import json
 from time import sleep
 from datetime import datetime
+import requests
 
 import numpy as np
 import pandas as pd
@@ -17,7 +18,7 @@ data_structure = {header: [] for header in headers}
 class Game:
     '''Datos de un juego'''
 
-    def __init__(self, appid, session, fast_mode=True):
+    def __init__(self, appid, session=requests, fast_mode=True):
         self.appID = appid
         self.name = ''
         self.price = 0
@@ -46,14 +47,12 @@ class Game:
             sleep(1)
         game_data = json.loads(response.text)
         # Obtiene el precio de los cromos
-        self.card_list = self.get_price_list(self.appID)
+        self.card_list = self.get_price_list()
         if(not fast_mode):
             sleep(1)
 
         # Obtiene el nombre del juego
         self.name = game_data[str(self.appID)]['data']['name']
-        # Detecta si el juego es gratis o no
-        is_free = game_data[str(self.appID)]['data']['is_free']
         # Obtiene la cantidad de los cromos que se dropean del juego
         cards_dropped = 3 if len(
             self.card_list) == 5 else len(self.card_list)//2
@@ -61,7 +60,9 @@ class Game:
         average_price = np.average(self.card_list)
         # Calcula la mediana de los precios de los cromos
         median_price = np.median(self.card_list)
-
+        
+        # Detecta si el juego es gratis o no
+        is_free = game_data[str(self.appID)]['data']['is_free']
         if(not is_free):
             # Obtiene el precio del juego en centavos
             self.price = game_data[str(
@@ -98,7 +99,7 @@ class Game:
         if(cards_data['total_count'] == 0):
             return [0]
         # Obtiene el valor de los cromos, limpia el string para sólo obtener el valor numérico y los ordena de menor a mayor
-        cards_prices = np.sort([float(cards_data['results'][i]['sell_price_text'][5:].replace(
-            ',', '.')) for i in range(len(cards_data['results']))])
+        cards_prices = np.sort(
+            [cards_data['results'][i]['sell_price'] / 100 for i in range(len(cards_data['results']))])
         # Retorna la lista de los cromos en orden ascendente
         return cards_prices
