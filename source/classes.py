@@ -46,7 +46,7 @@ class Game:
             sleep(1)
         game_data = json.loads(response.text)
         # Obtiene el precio de los cromos
-        self.card_list = self.get_price_list(self.appID, self.session)
+        self.card_list = self.get_price_list(self.appID)
         if(not fast_mode):
             sleep(1)
 
