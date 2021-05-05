@@ -13,30 +13,30 @@ data_structure = {header: [] for header in headers}
 def to_dataframe(appID, session):
     '''Transformar una lista de appIDs en un dataframe con los respectivos juegos y retornarlo'''
     # Se crea una base de datos auxiliar
-    database_aux = pd.DataFrame.from_dict(data_structure)
+    database = pd.DataFrame.from_dict(data_structure)
     for i in range(len(appID)):
         game = Game(appID[i], session)
         # Arma un array de arrays unidimensionales con los datos que se van a agregar
-        data_array = [[game.name], [game.price], [game.min_profit], [game.avg_profit], [
+        game_data = [[game.name], [game.price], [game.min_profit], [game.avg_profit], [
             game.med_profit], [game.appID], [game.card_list], [game.last_updated]]
 
         # Crea un dataframe con los datos para poder agregarlos
-        games_data = pd.DataFrame.from_dict(
-            {headers[j]: data_array[j] for j in range(len(data_array))})
+        game_df = pd.DataFrame.from_dict(
+            {headers[j]: game_data[j] for j in range(len(game_data))})
         # Agrega el i-ésimo juego a la base de datos auxiliar
-        database_aux = database_aux.append(games_data, ignore_index=True)
+        database = database.append(game_df, ignore_index=True)
 
         os.system('cls')
         # Imprime el número de juego / número de juegos totales
         print(f'{str(i+1)}/{str(len(appID))}')
         # Imprime la información del juego siendo analizado actualmente
-        games_data.drop(columns=['Lista de cromos',
+        game_df.drop(columns=['Lista de cromos',
                         'Ultima actualización'], inplace=True)
-        print(games_data)
+        print(game_df)
     os.system('cls')
-    print(database_aux.drop(columns=['Lista de cromos', 'Ultima actualización']).sort_values(
+    print(database.drop(columns=['Lista de cromos', 'Ultima actualización']).sort_values(
         'Retorno mínimo', ascending=False, ignore_index=True).head())
-    return database_aux
+    return database
 
 
 def save_database(database):
