@@ -6,6 +6,8 @@ import requests
 
 import numpy as np
 import pandas as pd
+import steam.webauth as wa
+import steam.guard as guard
 
 # Se centran los headers de la dataframe
 pd.set_option('colheader_justify', 'center')
@@ -60,7 +62,7 @@ class Game:
         average_price = np.average(self.card_list)
         # Calcula la mediana de los precios de los cromos
         median_price = np.median(self.card_list)
-        
+
         # Detecta si el juego es gratis o no
         is_free = game_data[str(self.appID)]['data']['is_free']
         if(not is_free):
@@ -103,3 +105,63 @@ class Game:
             [cards_data['results'][i]['sell_price'] / 100 for i in range(len(cards_data['results']))])
         # Retorna la lista de los cromos en orden ascendente
         return cards_prices
+
+
+class User:
+    '''Crear un objeto usuario donde se almacenan los datos del mismo.
+    El inicio de sesion es automático'''
+    def __init__(self, username='', password='', dir='user.json'):
+        self.username = username
+        self.password = password
+        self.steamID64 = ''
+        self.webAPIKey = ''
+        self.session = ''
+        self.logged_on = False
+        
+        if(os.path.isfile(dir)):
+            self.load(dir)
+        else:
+            self.create(dir)
+
+    def load(self, dir='user.json'):
+        try:
+            with open(dir, 'r', encoding='utf-8') as usercfg:
+                data = json.load(usercfg)
+                self.username = data['username']
+                self.password = data['password']
+                self.steamID64 = data['steamID64']
+                self.webAPIKey = data['key']  # https://steamcommunity.com/dev/apikey
+                self.login()
+        except:
+            print(
+                'Archivo de configuración inválido. Por favor eliminelo y reinicie el programa\n')
+
+    def create(self, dir='user.json'):
+        with open(dir, 'w', encoding='utf-8') as usercfg:
+            print('Se creará un archivo de configuracion en el directorio del programa')
+            print('Para poder omitir los juegos ya comprados al agregar juegos desde steamdb.info, deberá agregar su Steam API Key al archivo de configuración')
+            self.username = input('Ingrese su nombre de usuario: ') if self.username == '' else self.username
+            self.password = input('Ingrese su contraseña: ') if self.password == '' else self.password
+            self.login()
+            data = {'username': self.username,
+                    'password': self.password,
+                    'steamID64': self.steamID64,
+                    'key': ''}
+            json.dump(data, usercfg)
+
+    def login(self):
+        user = wa.WebAuth(self.username)
+
+        if(os.path.isfile('2FA.maFile')):
+            with open('2Fa.maFile', 'r') as f:
+                data = json.load(f)
+            self.session = user.cli_login(
+                self.password, twofactor_code=guard.SteamAuthenticator(secrets=data).get_code())
+        else:
+            self.session = user.cli_login(self.password)
+        
+        if user.logged_on:
+            self.steamID64 = user.steam_id.as_64
+            self.logged_on = True
+        else:
+            print('No se ha podido iniciar sesión')
