@@ -2,8 +2,6 @@ import os
 import sys
 import logging
 import json
-from subprocess import call
-from zipfile import ZipFile
 
 import pandas as pd
 
