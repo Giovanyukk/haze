@@ -87,6 +87,7 @@ def delete_database():
 
 
 def get_appid_list(maxprice=16):
+    '''Obtener los appids de los juegos con precio inferior a maxprice'''
     appid_list = []
     i = 1
     while(True):
@@ -100,7 +101,7 @@ def get_appid_list(maxprice=16):
         price_list = [float(x) if x != '' else 0 for x in price_list]
         if any(float(x) > 16 for x in price_list):
             appid_list += tree.xpath('//a[@data-ds-appid]/@data-ds-appid')[
-                :price_list.index(next(filter(lambda x: x > 16, price_list), None))]
+                :price_list.index(next(filter(lambda x: x > maxprice, price_list), None)) + 1]
             break
         appid_list += tree.xpath('//a[@data-ds-appid]/@data-ds-appid')
         i += 1
