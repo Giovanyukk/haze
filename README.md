@@ -1,10 +1,12 @@
+El archivo README corresponde a la ultima versión del código, no de compilación
+
 # Haze
 
 Una herramienta para monitorear el retorno esperado de la compra de juegos y venta de cromos en la plataforma Steam.  
 
 ## Integración con Steam
 Se puede utilizar la opcion **2** para generar una lista de juegos con precio menor a ARS$ 16. Esta lista es obtenida directamente de **Steam**.
-Adicionalmente, si se edita el archivo **user.json** y se completa el campo **key** con la *[Clave de Web API de Steam](https://steamcommunity.com/dev/apikey)*, puede utilizar la opción para omitir los juegos que ya se encuentran en la biblioteca.
+Adicionalmente, si se habilita la *[Clave de Web API de Steam](https://steamcommunity.com/dev/apikey)*, puede utilizar la opción para omitir los juegos que ya se encuentran en la biblioteca.
 
 ## Integración con Steam Desktop Authenticator
 La autenticación en 2 factores puede automatizarse si se coloca el archivo de secretos generado por [SDA](https://github.com/Jessecar96/SteamDesktopAuthenticator) en la carpeta donde está el ejecutable, con el nombre **2FA.maFile**
