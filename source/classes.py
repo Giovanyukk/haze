@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import steam.webauth as wa
 import steam.guard as guard
+from lxml import html
 
 # Se centran los headers de la dataframe
 pd.set_option('colheader_justify', 'center')
@@ -130,9 +131,6 @@ class User:
                 data = json.load(usercfg)
                 self.username = data['username']
                 self.password = data['password']
-                self.steamID64 = data['steamID64']
-                # https://steamcommunity.com/dev/apikey
-                self.webAPIKey = data['key']
                 self.login()
         except:
             print(
@@ -148,9 +146,7 @@ class User:
                 'Ingrese su contraseña: ') if self.password == '' else self.password
             self.login()
             data = {'username': self.username,
-                    'password': self.password,
-                    'steamID64': self.steamID64,
-                    'key': ''}
+                    'password': self.password}
             json.dump(data, usercfg)
 
     def login(self):
@@ -166,6 +162,10 @@ class User:
 
         if user.logged_on:
             self.steamID64 = user.steam_id.as_64
+            # https://steamcommunity.com/dev/apikey
+            key = html.fromstring(self.session.get(
+                'https://steamcommunity.com/dev/apikey').content).xpath('//*[@id="bodyContents_ex"]/p[1]/text()')[0]
+            self.webAPIKey = key[7:] if key[0] != 'R' else ''
             self.logged_on = True
         else:
             print('No se ha podido iniciar sesión')
