@@ -165,7 +165,7 @@ class User:
             # https://steamcommunity.com/dev/apikey
             key = html.fromstring(self.session.get(
                 'https://steamcommunity.com/dev/apikey').content).xpath('//*[@id="bodyContents_ex"]/p[1]/text()')[0]
-            self.webAPIKey = key[7:] if key[0] != 'R' else ''
+            self.webAPIKey = key[5:] if key[0] != 'R' else ''
             self.logged_on = True
         else:
             print('No se ha podido iniciar sesión')

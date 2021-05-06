@@ -1,12 +1,15 @@
+# Standard library imports
 import os
 import sys
 import logging
 import json
 
+# Third party imports
 import pandas as pd
 
-from source.functions import to_dataframe, save_database, delete_database, get_appid_list
-from source.classes import User
+# Local application imports
+from functions import to_dataframe, save_database, delete_database, get_appid_list
+from classes import User
 
 os.system('cls')
 
