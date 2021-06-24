@@ -139,7 +139,7 @@ class User:
     def create(self, dir='user.json'):
         with open(dir, 'w', encoding='utf-8') as usercfg:
             print('Se creará un archivo de configuracion en el directorio del programa')
-            print('Para poder omitir los juegos ya comprados al agregar juegos desde steamdb.info, deberá agregar su Steam API Key al archivo de configuración')
+            print('Para poder omitir los juegos ya comprados al agregar juegos desde steamdb.info, deberá activar la Steam API Key desde la página web de Steam')
             self.username = input(
                 'Ingrese su nombre de usuario: ') if self.username == '' else self.username
             self.password = input(
