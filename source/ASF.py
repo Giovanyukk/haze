@@ -39,21 +39,22 @@ def idle_bot(bot: str):
             sleep(10)
             cmd(f'pause {bot}')
 
-            appids = get(f'Bot/{bot}').json()['Result'][bot]['CardsFarmer']['GamesToFarm']
-            if(appids == {}):
+            appids = get(f'Bot/{bot}').json()['Result'][bot]['CardsFarmer']['GamesToFarm'] 
+            appids = [appids[i]['AppID'] for i in range(len(appids))]
+            
+            if(len(appids) != 0):
+                log(f'Se encontraron {len(appids)} juegos para farmear')
+                log(f'Farmeando {len(appids[:31])} juegos por 5 minutos...')
+                cmd(f'play {bot} {",".join(list(map(str,appids[:31])))}')
+                sleep(300)
+            else:
                 log(f'No hay juegos para farmear en {bot}')
                 break
-            appids = [appids[i]['AppID'] for i in range(len(appids))]
-
-            log(f'Se encontraron {len(appids)} juegos para farmear')
-            log(f'Farmeando {len(appids[:31])} juegos por 5 minutos...')
-            cmd(f'play {bot} {",".join(list(map(str,appids[:31])))}')
-            sleep(300)
 
             log('Pausando por 20 segundos')
             cmd(f'pause {bot}')
             sleep(20)
-
+            
             for appid in appids:
                 log(f'Farmeando {appid} por 7 segundos...')
                 cmd(f'play {bot} {appid}')
