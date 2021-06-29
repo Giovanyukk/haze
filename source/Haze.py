@@ -3,6 +3,8 @@ import os
 import sys
 import logging
 import json
+import threading as thr
+from time import sleep
 
 # Third party imports
 import pandas as pd
@@ -10,6 +12,7 @@ import pandas as pd
 # Local application imports
 from functions import to_dataframe, save_database, delete_database, get_appid_list
 from classes import User
+from ASF import idle_bot
 
 os.system('cls')
 
@@ -44,7 +47,8 @@ menu = {}
 menu['1'] = 'Actualización general'
 menu['2'] = 'Actualizar desde steamdb.info'
 menu['3'] = 'Eliminar base de datos'
-menu['4'] = 'Salir'
+menu['4'] = 'Fast-mode para ASF'
+menu['5'] = 'Salir'
 
 os.system('cls')
 
@@ -89,6 +93,15 @@ try:
         elif(option == '3'):
             delete_database()
             database = pd.DataFrame.from_dict(data_structure)
+        elif(option == '4'):
+            os.system('cls')
+            bots = input('Ingrese los nombres de los bots separados por comas: ').split(',')
+            print('Iniciando fast-mode. Para salir una vez que comience, presione cualquier tecla')
+            sleep(5)
+            for bot in bots:
+                thr.Thread(target=idle_bot, args=(bot,), daemon=True).start()
+            input('')
+            os.system('cls')
         else:
             break
 # Salvo que el programa se cierre de forma inesperada, se guardan los detalles en el logger antes de cerrarse
