@@ -101,7 +101,7 @@ try:
             for bot in bots:
                 thr.Thread(target=idle_bot, args=(bot,), daemon=True).start()
             input('')
-            os.system('cls')
+            break
         else:
             break
 # Salvo que el programa se cierre de forma inesperada, se guardan los detalles en el logger antes de cerrarse
