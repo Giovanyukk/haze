@@ -1,5 +1,6 @@
 # Standard library imports
 import os
+import subprocess
 import sys
 import logging
 import json
@@ -12,7 +13,7 @@ import pandas as pd
 # Local application imports
 from functions import to_dataframe, save_database, delete_database, get_appid_list
 from classes import User
-from ASF import idle_bot
+from ASF import idle_bot, cmd, wait_for_threads
 
 os.system('cls')
 
@@ -44,11 +45,10 @@ else:
 
 # Entradas del menu principal
 menu = {}
-menu['1'] = 'Actualización general'
-menu['2'] = 'Actualizar desde steamdb.info'
-menu['3'] = 'Eliminar base de datos'
-menu['4'] = 'Fast-mode para ASF'
-menu['5'] = 'Salir'
+menu['1'] = 'Actualizar base de datos local'
+menu['2'] = 'Actualizar desde Steam'
+menu['3'] = 'ArchiSteamFarm'
+menu['4'] = 'Salir'
 
 os.system('cls')
 
@@ -91,17 +91,40 @@ try:
                     appid_list, user.session), ignore_index=True)
                 save_database(database)
         elif(option == '3'):
-            delete_database()
-            database = pd.DataFrame.from_dict(data_structure)
-        elif(option == '4'):
             os.system('cls')
-            bots = input('Ingrese los nombres de los bots separados por comas: ').split(',')
-            print('Iniciando fast-mode. Para salir una vez que comience, presione cualquier tecla')
-            sleep(5)
+            bots = []
+            while(len(bots) == 0):
+                bots = input('Ingrese los nombres de los bots separados por comas: ').replace(
+                    ' ', '').split(',')
+            threads = []
             for bot in bots:
-                thr.Thread(target=idle_bot, args=(bot,), daemon=True).start()
+                thread = thr.Thread(target=idle_bot, args=(bot,), daemon=True)
+                thread.name = f'{bot}Thread'
+                thread.start()
+                threads += [thread]
+            if(os.path.exists('./ArchiSteamFarm.exe') and not ('ASFThread' in thr.enumerate())):
+                print('Iniciando ASF')
+                #os.system(os.getcwd() + '\\ArchiSteamFarm.exe')
+                ASF_thread = thr.Thread(target=lambda x: subprocess.Popen(
+                    x, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL), args=('./ArchiSteamFarm.exe',), daemon=True)
+                ASF_thread.name = 'ASFThread'
+                ASF_thread.start()
+                threads += [ASF_thread]
+            elif(os.path.exists('./ArchiSteamFarm.exe')):
+                input('Iniciando fast-mode')
+            else:
+                print(
+                    'No se encontró el ejecutable de ASF. Se activará solo el fast-mode')
+            thread_manager = thr.Thread(
+                target=wait_for_threads, args=(threads,), daemon=True)
+            thread_manager.name = 'ThreadManager'
+            thread_manager.start()
             input('')
-            break
+            try:
+                cmd('exit')
+            except:
+                pass
+            os.system('cls')
         else:
             break
 # Salvo que el programa se cierre de forma inesperada, se guardan los detalles en el logger antes de cerrarse
