@@ -67,14 +67,15 @@ def idle_bot(bot: str):
         if(len(appids) != 0):
             if(any([time > 3 for time in hours])):
                 log(f'Se encontraron {len(appids)} juegos para farmear')
-                log(f'Farmeando {len(appids[:31])} juegos por 5 minutos')
-                cmd(f'play {bot} {",".join(list(map(str,appids[:31])))}')
+                log(f'Farmeando {len(appids[:32])} juegos por 5 minutos')
+                cmd(f'play {bot} {",".join(list(map(str,appids[:32])))}')
                 sleep(300)
             else:
                 log(f'Ningun juego llegó a las 3 horas aún')
-                log(f'Farmeando {len(appids[:31])} juegos por 15 minutos')
+                remaining_time = (10800 - max(hours) * 3600)
+                log(f'Farmeando {len(appids[:31])} juegos por {(str(round(remaining_time / 60)) + " minutos") if remaining_time < 3600 else (str(round(remaining_time / 3600,1)) + " horas")}')
                 cmd(f'play {bot} {",".join(list(map(str,appids[:31])))}')
-                sleep(900)
+                sleep(10800 - max(hours) * 3600)
         else:
             log(f'No hay juegos para farmear en {bot}')
             break
