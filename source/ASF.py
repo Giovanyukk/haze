@@ -61,11 +61,12 @@ def idle_bot(bot: str, ismain=False):
 
         appids = get(f'Bot/{bot}').json()['Result'][bot]['CardsFarmer']['GamesToFarm']
         hours = [appids[i]['HoursPlayed'] for i in range(len(appids))]
+        remaining_cards = sum([int(appids[i]['CardsRemaining']) for i in range(len(appids))])
         appids = [appids[i]['AppID'] for i in range(len(appids))]
         
         if(len(appids) != 0):
             if(any([time > 3 for time in hours])):
-                log(f'Se encontraron {len(appids)} juegos para farmear')
+                log(f'Se encontraron {len(appids)} juegos para farmear, {str(remaining_cards)} cromos restantes')
                 log(f'Farmeando {len(appids[:32])} juegos por 5 minutos')
                 cmd(f'play {bot} {",".join(list(map(str,appids[:32])))}')
                 sleep(300)
