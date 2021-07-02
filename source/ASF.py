@@ -1,10 +1,9 @@
+# Standard library imports
 import json
 import threading
 import requests
 from datetime import datetime
 from time import sleep
-import os
-import subprocess
 
 URL = 'http://127.0.0.1:1242'
 
@@ -34,7 +33,7 @@ def cmd(data: str):
     post('Command', '{"Command":"' + data + '"}')
 
 
-def idle_bot(bot: str):
+def idle_bot(bot: str, ismain=False):
     sleep(10)
 
     logged_on = get(f'Bot/{bot}')
@@ -88,6 +87,9 @@ def idle_bot(bot: str):
             log(f'Farmeando {appid} por 7 segundos...')
             cmd(f'play {bot} {appid}')
             sleep(7)
+
+        if(ismain == False):
+            cmd(f'loot {bot}')
 
 
 def wait_for_threads(threads: list[threading.Thread]):
