@@ -45,9 +45,9 @@ def idle_bot(bot: str, ismain=False):
         if(retries > 3):
             log(f'No se ha podido conectar el bot {bot}')
             return 1
-    with open('test.json','w') as f:
+    with open('test.json', 'w') as f:
         json.dump(logged_on.json(), f)
-    
+
     log(f'Bot {bot} conectado correctamente')
 
     cmd(f'pause {bot}')
@@ -59,11 +59,13 @@ def idle_bot(bot: str, ismain=False):
         sleep(10)
         cmd(f'pause {bot}')
 
-        appids = get(f'Bot/{bot}').json()['Result'][bot]['CardsFarmer']['GamesToFarm']
+        appids = get(
+            f'Bot/{bot}').json()['Result'][bot]['CardsFarmer']['GamesToFarm']
         hours = [appids[i]['HoursPlayed'] for i in range(len(appids))]
-        remaining_cards = sum([int(appids[i]['CardsRemaining']) for i in range(len(appids))])
+        remaining_cards = sum([int(appids[i]['CardsRemaining'])
+                              for i in range(len(appids))])
         appids = [appids[i]['AppID'] for i in range(len(appids))]
-        
+
         if(len(appids) != 0):
             if(any([time > 3 for time in hours])):
                 log(f'Se encontraron {len(appids)} juegos para farmear, {str(remaining_cards)} cromos restantes')
@@ -83,7 +85,7 @@ def idle_bot(bot: str, ismain=False):
         log('Pausando por 20 segundos')
         cmd(f'pause {bot}')
         sleep(20)
-        
+
         for appid in appids:
             log(f'Farmeando {appid} por 7 segundos...')
             cmd(f'play {bot} {appid}')

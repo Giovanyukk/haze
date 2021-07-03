@@ -96,7 +96,8 @@ try:
                 bots = input('Ingrese los nombres de los bots separados por comas: ').replace(
                     ' ', '').split(',')
             threads = []
-            thread = thr.Thread(target=idle_bot, args=(bots[0], True), daemon=True, name=f'{bots[0]}Thread')
+            thread = thr.Thread(target=idle_bot, args=(
+                bots[0], True), daemon=True, name=f'{bots[0]}Thread')
             thread.start()
             threads += [thread]
             for bot in bots[1:]:
