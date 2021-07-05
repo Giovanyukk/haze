@@ -49,10 +49,15 @@ def save_database(database):
     database.sort_values('Retorno mínimo', ascending=False, inplace=True)
     database.to_csv('database/main.csv', index=False)
     # Se aplica formato al archivo .xlsx
-    excel_writer = pd.ExcelWriter('database/main.xlsx', engine='xlsxwriter')
+    excel_writer = pd.ExcelWriter(  # pylint: disable=abstract-class-instantiated
+        'database/main.xlsx', engine='xlsxwriter')
     database.to_excel(excel_writer, index=False, float_format='%.3f',
                       encoding='cp1252', sheet_name='Cromos')
     worksheet = excel_writer.sheets['Cromos']
+
+    for appid, i in zip(database['AppID'].values, range(len(database['AppID'].values))):
+        worksheet.write_url(
+            f'F{str(i + 2)}', f'https://store.steampowered.com/app/{str(appid)}/', string=str(appid))
     for idx, col in enumerate(database):
         series = database[col]
         max_len = max((
@@ -61,12 +66,13 @@ def save_database(database):
         )) + 1  # Espacio extra
         # Se establece el ancho de la columna
         worksheet.set_column(idx, idx, max_len)
-    worksheet.conditional_format('C2:C{}'.format(len(
-        database) + 1), {'type': '3_color_scale', 'min_type': 'num', 'mid_value': 0, 'mid_color': '#FFFFFF'})
-    worksheet.conditional_format('D2:D{}'.format(len(
-        database) + 1), {'type': '3_color_scale', 'min_type': 'num', 'mid_value': 0, 'mid_color': '#FFFFFF'})
-    worksheet.conditional_format('E2:E{}'.format(len(
-        database) + 1), {'type': '3_color_scale', 'min_type': 'num', 'mid_value': 0, 'mid_color': '#FFFFFF'})
+
+    worksheet.conditional_format(f'C2:C{str(len(database) + 1)}', {
+                                 'type': '3_color_scale', 'min_type': 'num', 'mid_value': 0, 'mid_color': '#FFFFFF'})
+    worksheet.conditional_format(f'D2:D{str(len(database) + 1)}', {
+                                 'type': '3_color_scale', 'min_type': 'num', 'mid_value': 0, 'mid_color': '#FFFFFF'})
+    worksheet.conditional_format(f'E2:E{str(len(database) + 1)}', {
+                                 'type': '3_color_scale', 'min_type': 'num', 'mid_value': 0, 'mid_color': '#FFFFFF'})
     # Se guarda el .xlsx
     excel_writer.save()
 
