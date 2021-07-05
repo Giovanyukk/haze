@@ -59,25 +59,33 @@ def idle_bot(bot: str, ismain=False):
         sleep(10)
         cmd(f'pause {bot}')
 
-        appids = get(
+        games_to_farm = get(
             f'Bot/{bot}').json()['Result'][bot]['CardsFarmer']['GamesToFarm']
-        hours = [appids[i]['HoursPlayed'] for i in range(len(appids))]
-        remaining_cards = sum([int(appids[i]['CardsRemaining'])
-                              for i in range(len(appids))])
-        appids = [appids[i]['AppID'] for i in range(len(appids))]
+        hours_played = max([games_to_farm[i]['HoursPlayed']
+                           for i in range(len(games_to_farm))], default=0)
+        remaining_cards = sum([int(games_to_farm[i]['CardsRemaining'])
+                              for i in range(len(games_to_farm))])
+        appids = [games_to_farm[i]['AppID'] for i in range(len(games_to_farm))]
 
         if(len(appids) != 0):
-            if(any([time > 3 for time in hours])):
+            if(hours_played >= 3):
                 log(f'Se encontraron {len(appids)} juegos para farmear, {str(remaining_cards)} cromos restantes')
                 log(f'Farmeando {len(appids[:32])} juegos por 5 minutos')
                 cmd(f'play {bot} {",".join(list(map(str,appids[:32])))}')
                 sleep(300)
             else:
                 log(f'Ningun juego llegó a las 3 horas aún')
-                remaining_time = (10800 - max(hours) * 3600)
-                log(f'Farmeando {len(appids[:31])} juegos por {(str(round(remaining_time / 60)) + " minutos") if remaining_time < 3600 else (str(round(remaining_time / 3600,1)) + " horas")}')
-                cmd(f'play {bot} {",".join(list(map(str,appids[:31])))}')
-                sleep(10800 - max(hours) * 3600)
+                remaining_time_hours = 3 - hours_played
+                remaining_time_minutes = remaining_time_hours * 60
+                remaining_time_seconds = remaining_time_minutes * 60
+                if remaining_time_hours < 1:
+                    log(
+                        f'Farmeando {len(appids[:31])} juegos por {str(round(remaining_time_minutes))} minutos')
+                else:
+                    log(
+                        f'Farmeando {len(appids[:31])} juegos por {str(round(remaining_time_hours, 1))} horas')
+                cmd(f'play {bot} {",".join(list(map(str,appids[:32])))}')
+                sleep(remaining_time_seconds)
         else:
             log(f'No hay juegos para farmear en {bot}')
             break
