@@ -55,9 +55,12 @@ def save_database(database):
                       encoding='cp1252', sheet_name='Cromos')
     worksheet = excel_writer.sheets['Cromos']
 
-    for appid, i in zip(database['AppID'].values, range(len(database['AppID'].values))):
+    for appid, list, i in zip(database['AppID'].values, database['Lista de cromos'].values, range(len(database['AppID'].values))):
         worksheet.write_url(
             f'F{str(i + 2)}', f'https://store.steampowered.com/app/{str(appid)}/', string=str(appid))
+        worksheet.write_url(
+            f'G{str(i + 2)}', f'https://steamcommunity.com/market/search?category_753_Game%5B%5D=tag_app_{str(appid)}&category_753_cardborder%5B%5D=tag_cardborder_0&category_753_item_class%5B%5D=tag_item_class_2&appid=753', string=str(list))
+
     for idx, col in enumerate(database):
         series = database[col]
         max_len = max((
