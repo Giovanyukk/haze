@@ -143,13 +143,17 @@ def get_card_price_history(market_hash_name: str, session: requests.Session = re
         f'https://steamcommunity.com/market/pricehistory/?appid=753&market_hash_name={market_hash_name}')
     json = response.json()
 
+    X: list[datetime.datetime]
+    Y: list[float]
+    N: list[int]
+
     if(json['success'] == True):
-        X: list[datetime.datetime] = [datetime.datetime.strptime(
+        X = [datetime.datetime.strptime(
             json['prices'][i][0][:-4], '%b %d %Y %H') for i in range(len(json['prices']))]
-        Y: list[float] = [json['prices'][i][1]
-                          for i in range(len(json['prices']))]
-        N: list[int] = [int(json['prices'][i][2])
-                        for i in range(len(json['prices']))]
+        Y = [json['prices'][i][1]
+             for i in range(len(json['prices']))]
+        N = [int(json['prices'][i][2])
+             for i in range(len(json['prices']))]
         return X, Y, N
     else:
         raise ValueError(
