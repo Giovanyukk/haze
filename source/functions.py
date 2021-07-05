@@ -1,3 +1,4 @@
+import datetime
 import os
 import requests
 
@@ -12,7 +13,7 @@ headers = ['Nombre', 'Precio', 'Retorno mínimo', 'Retorno medio', 'Retorno medi
 data_structure = {header: [] for header in headers}
 
 
-def to_dataframe(appID, session):
+def to_dataframe(appID: list, session: requests.Session):
     '''Transformar una lista de appIDs en un dataframe con los respectivos juegos y retornarlo'''
     # Se crea una base de datos auxiliar
     database = pd.DataFrame.from_dict(data_structure)
@@ -96,7 +97,13 @@ def delete_database():
 
 
 def get_appid_list(maxprice=16):
-    '''Obtener los appids de los juegos con precio inferior a maxprice'''
+    '''Obtener los appids de los juegos con precio inferior a maxprice
+
+    Retorna: appid_list
+
+    appid_list: Lista de appids
+    '''
+
     appid_list = []
     i = 1
     while(True):
@@ -120,3 +127,30 @@ def get_appid_list(maxprice=16):
         i += 1
     appid_list = [x for x in appid_list if not ',' in x]
     return appid_list
+
+
+def get_card_price_history(market_hash_name: str, session: requests.Session = requests.Session):
+    '''Obtener el historial de precios de un cromo
+
+    Retorna: X, Y, N (listas)
+
+    X: Fechas [datetime]
+    Y: Precios [float]
+    N: Cantidad vendidos [int]
+    '''
+
+    response = session.get(
+        f'https://steamcommunity.com/market/pricehistory/?appid=753&market_hash_name={market_hash_name}')
+    json = response.json()
+
+    if(json['success'] == True):
+        X: list[datetime.datetime] = [datetime.datetime.strptime(
+            json['prices'][i][0][:-4], '%b %d %Y %H') for i in range(len(json['prices']))]
+        Y: list[float] = [json['prices'][i][1]
+                          for i in range(len(json['prices']))]
+        N: list[int] = [int(json['prices'][i][2])
+                        for i in range(len(json['prices']))]
+        return X, Y, N
+    else:
+        raise ValueError(
+            f'Hubo un error al obtener el historial de precios del cromo {market_hash_name}')
