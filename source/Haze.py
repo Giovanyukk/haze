@@ -27,6 +27,14 @@ if(not os.path.exists('database')):
 # Se crea un objeto usuario
 user = User()
 
+#
+with open('./user.json', 'r') as f:
+    try:
+        asf_path = json.load(f)['asf_path']
+    except:
+        print('No se ha definido la ruta del ejecutable de ArchiSteamFarm. Puede definirla editando el archivo user.json')
+        asf_path = None
+
 # Se centran los headers de la dataframe
 pd.set_option('colheader_justify', 'center')
 headers = ['Nombre', 'Precio', 'Retorno mínimo', 'Retorno medio', 'Retorno mediano',
@@ -105,16 +113,13 @@ try:
                 thread.name = f'{bot}Thread'
                 thread.start()
                 threads += [thread]
-            if(os.path.exists('./ArchiSteamFarm.exe') and not ('ASFThread' in thr.enumerate())):
+            if(asf_path != None and os.path.exists(asf_path)):
                 print('Iniciando ASF')
-                #os.system(os.getcwd() + '\\ArchiSteamFarm.exe')
                 ASF_thread = thr.Thread(target=lambda x: subprocess.Popen(
-                    x, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL), args=('./ArchiSteamFarm.exe',), daemon=True)
+                    x, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL), args=(asf_path,), daemon=True)
                 ASF_thread.name = 'ASFThread'
                 ASF_thread.start()
                 threads += [ASF_thread]
-            elif(os.path.exists('./ArchiSteamFarm.exe')):
-                input('Iniciando fast-mode')
             else:
                 print(
                     'No se encontró el ejecutable de ASF. Se activará solo el fast-mode')
