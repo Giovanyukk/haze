@@ -101,8 +101,7 @@ try:
             os.system('cls')
             bots = []
             while(len(bots) == 0):
-                bots = input('Ingrese los nombres de los bots separados por comas: ').replace(
-                    ' ', '').split(',')
+                bots = [i.strip() for i in input('Ingrese los nombres de los bots separados por comas: ').split(',')]
             threads = []
             thread = thr.Thread(target=idle_bot, args=(
                 bots[0], True), daemon=True, name=f'{bots[0]}Thread')
