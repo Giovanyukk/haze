@@ -1,6 +1,5 @@
 # Standard library imports
-import json
-import threading
+import threading as thr
 import requests
 from datetime import datetime
 from time import sleep
@@ -116,7 +115,7 @@ def idle_bot(bot: str, ismain=False):
 
 
 
-def wait_for_threads(threads: list[threading.Thread]):
+def wait_for_threads(threads: list[thr.Thread]):
     for thread in threads:
         thread.join()
     log('No quedan cromos por farmear. Presione cualquier tecla para volver a Haze')
