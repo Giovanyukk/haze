@@ -7,8 +7,9 @@ from lxml import html
 from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
 from matplotlib import dates, ticker
+import pyfiglet
 
-from classes import Game, User
+from classes import Game
 
 headers = ['Nombre', 'Precio', 'Retorno mínimo', 'Retorno medio', 'Retorno mediano',
            'AppID', 'Lista de cromos', 'Ultima actualización']  # Nombres de las columnas
@@ -134,8 +135,11 @@ def get_appid_list(maxprice=16):
     return appid_list
 
 
-def get_card_price_history(market_hash_name: str, session: requests.Session = requests.Session, since: datetime.date = None):
+def get_card_price_history(market_hash_name: str, session: requests.Session = requests.Session, since: str = 'general'):
     '''Obtener el historial de precios de un cromo
+
+    since : str
+        'general', 'last-week', 'last-month', default:'general'
 
     Retorna: X, Y, N
 
@@ -161,14 +165,23 @@ def get_card_price_history(market_hash_name: str, session: requests.Session = re
              for i in range(len(json['prices']))]
         N = [int(json['prices'][i][2])
              for i in range(len(json['prices']))]
-        if(since == None):
+        if(since == 'general'):
             return X, Y, N
-        else:
-            X = [i for i in X if i > datetime.datetime.combine(
-                since, datetime.time(0, 0))]
+        elif(since == 'last-week'):
+            X = [i for i in X if i > datetime.datetime.today() -
+                 datetime.timedelta(7)]
             Y = Y[-len(X):]
             N = N[-len(X):]
             return X, Y, N
+        elif(since == 'last-month'):
+            X = [i for i in X if i > datetime.datetime.today() -
+                 datetime.timedelta(31)]
+            Y = Y[-len(X):]
+            N = N[-len(X):]
+            return X, Y, N
+        else:
+            raise ValueError(
+                f'Debe indicar un periodo de tiempo válido')
     else:
         raise ValueError(
             f'Hubo un error al obtener el historial de precios del cromo {market_hash_name}')
@@ -256,7 +269,7 @@ def plot_graphs(session: requests.Session = requests.Session):
     X_buy, Y_buy, X_sell, Y_sell = get_card_sales_histogram(
         '399430-Super%20Tinboy', session)
     X, Y, _ = get_card_price_history(
-        '399430-Super%20Tinboy', session, since=datetime.date(2021, 6, 1))
+        '399430-Super%20Tinboy', session, since='last-month')
 
     ax = setup_subplots()
 
@@ -268,3 +281,10 @@ def plot_graphs(session: requests.Session = requests.Session):
                        color='#688F3E', alpha=0.9, lw=1.5)
 
     plt.show()
+
+
+def welcome_screen():
+    '''Imprimir el logo de Haze'''
+
+    fig = pyfiglet.figlet_format('Haze', font='isometric1')
+    print(fig)
