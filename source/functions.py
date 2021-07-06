@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
 from matplotlib import dates, ticker
 
-from classes import Game
+from classes import Game, User
 
 headers = ['Nombre', 'Precio', 'Retorno mínimo', 'Retorno medio', 'Retorno mediano',
            'AppID', 'Lista de cromos', 'Ultima actualización']  # Nombres de las columnas
@@ -230,13 +230,13 @@ def setup_subplots():
     '''
 
     fig, ax = plt.subplots(nrows=2, ncols=1)
-    fig.set_facecolor('#1b2838')
+    fig.set_facecolor('#1B2838')
 
     ax[0].yaxis.set_major_formatter(ticker.FormatStrFormatter("ARS$%.2f"))
     ax[0].xaxis.set_major_formatter(dates.DateFormatter('%d/%m/%y'))
 
     for i in range(2):
-        ax[i].set_facecolor('#1b2838')
+        ax[i].set_facecolor('#101822')
         ax[i].grid()
         ax[i].tick_params(axis='x', colors='white')
         ax[i].tick_params(axis='y', colors='white')
