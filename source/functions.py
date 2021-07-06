@@ -141,7 +141,7 @@ def get_card_price_history(market_hash_name: str, session: requests.Session = re
 
     X: list[datetime] Fechas
     Y: list[float] Precios
-    N: list[int] Cantidad vendidos *test* **test**
+    N: list[int] Cantidad vendidos
 
     1 REQUEST
     '''
