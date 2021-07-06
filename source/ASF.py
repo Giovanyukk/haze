@@ -71,15 +71,17 @@ def idle_bot(bot: str, ismain=False):
             games_to_farm = get(
                 f'Bot/{bot}').json()['Result'][bot]['CardsFarmer']['GamesToFarm']
             hours_played = max([games_to_farm[i]['HoursPlayed']
-                            for i in range(len(games_to_farm))], default=0)
+                                for i in range(len(games_to_farm))], default=0)
             remaining_cards = sum([int(games_to_farm[i]['CardsRemaining'])
-                                for i in range(len(games_to_farm))])
-            appids = [games_to_farm[i]['AppID'] for i in range(len(games_to_farm))]
+                                   for i in range(len(games_to_farm))])
+            appids = [games_to_farm[i]['AppID']
+                      for i in range(len(games_to_farm))]
 
             if(len(appids) != 0):
                 if(hours_played >= 3):
                     log(f'{bot} - Se encontraron {len(appids)} juegos para farmear, {str(remaining_cards)} cromos restantes')
-                    log(f'{bot} - Farmeando {len(appids[:32])} juegos por 5 minutos')
+                    log(
+                        f'{bot} - Farmeando {len(appids[:32])} juegos por 5 minutos')
                     cmd(f'play {bot} {",".join(list(map(str,appids[:32])))}')
                     sleep(300)
                 else:
@@ -112,7 +114,6 @@ def idle_bot(bot: str, ismain=False):
                 cmd(f'loot {bot}')
     except:
         log(f'{bot} - Desconectado')
-
 
 
 def wait_for_threads(threads: list[thr.Thread]):

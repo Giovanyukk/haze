@@ -133,12 +133,12 @@ try:
                 target=wait_for_threads, args=(threads,), daemon=True, name='ThreadManager')
             thread_manager.start()
             input('')
-            
+
             try:
                 cmd('exit')
             except:
                 pass
-            
+
             ctypes.windll.kernel32.SetConsoleTitleW(f'Haze v{VERSION}')
             os.system('cls')
         else:
