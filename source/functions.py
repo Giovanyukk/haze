@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
 from matplotlib import dates, ticker
 
-from classes import Game, User
+from classes import Game
 
 headers = ['Nombre', 'Precio', 'Retorno mínimo', 'Retorno medio', 'Retorno mediano',
            'AppID', 'Lista de cromos', 'Ultima actualización']  # Nombres de las columnas
