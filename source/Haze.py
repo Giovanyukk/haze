@@ -27,14 +27,6 @@ if(not os.path.exists('database')):
 # Se crea un objeto usuario
 user = User()
 
-# TODO: Iniciar ASF directamente desde Haze
-with open('./user.json', 'r') as f:
-    try:
-        asf_path = json.load(f)['asf_path']
-    except:
-        print('No se ha definido la ruta del ejecutable de ArchiSteamFarm. Puede definirla editando el archivo user.json')
-        asf_path = None
-
 # Se centran los headers de la dataframe
 pd.set_option('colheader_justify', 'center')
 headers = ['Nombre', 'Precio', 'Retorno mínimo', 'Retorno medio', 'Retorno mediano',
@@ -58,8 +50,17 @@ menu['3'] = 'ArchiSteamFarm'
 
 os.system('cls')
 
+# TODO: Iniciar ASF directamente desde Haze
+with open('./user.json', 'r') as f:
+    try:
+        asf_path = json.load(f)['asf_path']
+    except:
+        print('No se ha definido la ruta del ejecutable de ArchiSteamFarm. Puede definirla editando el archivo user.json')
+        asf_path = None
+
 try:
     while(True):
+        # Se imprime el menu principal
         print('Ingrese una de las siguientes opciones:')
         for entry in list(menu.keys()):
             print(f'\t({entry}) {menu[entry]}')
@@ -83,8 +84,7 @@ try:
                 owned_games_URL = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=' + \
                     user.webAPIKey + '&steamid=' + \
                     str(user.steamID64) + '&format=json'
-                games_data = json.loads(
-                    user.session.get(owned_games_URL).text)
+                games_data = user.session.get(owned_games_URL).json()
                 owned_games_list = [int(games_data['response']['games'][x]['appid']) for x in range(
                     len(games_data['response']['games']))]
                 appid_list = [x for x in appid_list if int(
@@ -100,30 +100,31 @@ try:
             os.system('cls')
             bots = []
             while(len(bots) == 0):
-                bots = [i.strip() for i in input('Ingrese los nombres de los bots separados por comas: ').split(',')]
-            threads = []
+                bots = [i.strip() for i in input(
+                    'Ingrese los nombres de los bots separados por comas: ').split(',')]
             thread = thr.Thread(target=idle_bot, args=(
                 bots[0], True), daemon=True, name=f'{bots[0]}Thread')
             thread.start()
-            threads += [thread]
+            threads = [thread]
             for bot in bots[1:]:
-                thread = thr.Thread(target=idle_bot, args=(bot,), daemon=True)
-                thread.name = f'{bot}Thread'
+                thread = thr.Thread(target=idle_bot, args=(
+                    bot,), daemon=True, name=f'{bot}Thread')
                 thread.start()
                 threads += [thread]
             if(asf_path != None and os.path.exists(asf_path)):
                 print('Iniciando ASF')
-                ASF_thread = thr.Thread(target=lambda x: subprocess.Popen(
-                    x, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL), args=(asf_path,), daemon=True)
-                ASF_thread.name = 'ASFThread'
+
+                def subprocess_no_stdout(path): return subprocess.Popen(
+                    path, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                ASF_thread = thr.Thread(
+                    target=subprocess_no_stdout, args=(asf_path,), daemon=True, name='ASFThread')
                 ASF_thread.start()
                 threads += [ASF_thread]
             else:
                 print(
                     'No se encontró el ejecutable de ASF. Se activará solo el fast-mode')
             thread_manager = thr.Thread(
-                target=wait_for_threads, args=(threads,), daemon=True)
-            thread_manager.name = 'ThreadManager'
+                target=wait_for_threads, args=(threads,), daemon=True, name='ThreadManager')
             thread_manager.start()
             input('')
             try:
