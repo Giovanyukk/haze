@@ -5,8 +5,10 @@ import requests
 import pandas as pd
 from lxml import html
 from bs4 import BeautifulSoup
+import matplotlib.pyplot as plt
+from matplotlib import dates, ticker
 
-from classes import Game
+from classes import Game, User
 
 headers = ['Nombre', 'Precio', 'Retorno mínimo', 'Retorno medio', 'Retorno mediano',
            'AppID', 'Lista de cromos', 'Ultima actualización']  # Nombres de las columnas
@@ -102,7 +104,9 @@ def get_appid_list(maxprice=16):
 
     Retorna: appid_list
 
-    appid_list: Lista de appids
+    appid_list: list[str] Lista de appids
+
+    1 REQUEST
     '''
 
     appid_list = []
@@ -130,14 +134,14 @@ def get_appid_list(maxprice=16):
     return appid_list
 
 
-def get_card_price_history(market_hash_name: str, session: requests.Session = requests.Session):
+def get_card_price_history(market_hash_name: str, session: requests.Session = requests.Session, since: datetime.date = None):
     '''Obtener el historial de precios de un cromo
 
     Retorna: X, Y, N
 
-    X: [datetime] Fechas
-    Y: [float] Precios
-    N: [int] Cantidad vendidos
+    X: list[datetime] Fechas
+    Y: list[float] Precios
+    N: list[int] Cantidad vendidos *test* **test**
 
     1 REQUEST
     '''
@@ -157,7 +161,14 @@ def get_card_price_history(market_hash_name: str, session: requests.Session = re
              for i in range(len(json['prices']))]
         N = [int(json['prices'][i][2])
              for i in range(len(json['prices']))]
-        return X, Y, N
+        if(since == None):
+            return X, Y, N
+        else:
+            X = [i for i in X if i > datetime.datetime.combine(
+                since, datetime.time(0, 0))]
+            Y = Y[-len(X):]
+            N = N[-len(X):]
+            return X, Y, N
     else:
         raise ValueError(
             f'Hubo un error al obtener el historial de precios del cromo {market_hash_name}')
@@ -168,10 +179,10 @@ def get_card_sales_histogram(market_hash_name: str, session: requests.Session = 
 
     Retorna: X_buy, Y_buy, X_sell, Y_sell
 
-    X_buy: [float] Precio de compra
-    Y_buy: [int] Cantidad de ordenes de compra
-    X_sell: [float] Precio de venta
-    Y_sell: [int] Cantidad de ordenes de venta
+    X_buy: list[float] Precio de compra
+    Y_buy: list[int] Cantidad de ordenes de compra
+    X_sell: list[float] Precio de venta
+    Y_sell: list[int] Cantidad de ordenes de venta
 
     2 REQUESTS
     '''
@@ -182,7 +193,7 @@ def get_card_sales_histogram(market_hash_name: str, session: requests.Session = 
     soup = BeautifulSoup(html, 'html.parser')
     last_script = str(soup.find_all('script')[-1])
     last_script_token = last_script.split('(')[-1]
-    item_nameid = last_script_token.split(');')[0]
+    item_nameid = last_script_token.split(');')[0].strip()
 
     response = session.get(
         f'https://steamcommunity.com/market/itemordershistogram?country=AR&language=spanish&currency=34&item_nameid={item_nameid}&two_factor=0')
@@ -207,3 +218,53 @@ def get_card_sales_histogram(market_hash_name: str, session: requests.Session = 
     else:
         raise ValueError(
             f'Hubo un error al obtener el histograma de oferta/demanda del cromo {market_hash_name}')
+
+
+def setup_subplots():
+    '''Crear un subplot con el formato de colores de Steam.
+
+    Retorna: fig, ax
+
+    fig: plt.figure.Figure Figura
+    ax: list[plt.axes.Axes] Pares de ejes
+    '''
+
+    fig, ax = plt.subplots(nrows=2, ncols=1)
+    fig.set_facecolor('#1b2838')
+
+    ax[0].yaxis.set_major_formatter(ticker.FormatStrFormatter("ARS$%.2f"))
+    ax[0].xaxis.set_major_formatter(dates.DateFormatter('%d/%m/%y'))
+
+    for i in range(2):
+        ax[i].set_facecolor('#1b2838')
+        ax[i].grid()
+        ax[i].tick_params(axis='x', colors='white')
+        ax[i].tick_params(axis='y', colors='white')
+        ax[i].xaxis.label.set_color('white')
+        ax[i].yaxis.label.set_color('white')
+        ax[i].spines['left'].set_color('white')
+        ax[i].spines['top'].set_color('white')
+        ax[i].spines['bottom'].set_color('white')
+        ax[i].spines['right'].set_color('white')
+
+    return ax
+
+
+def plot_graphs(session: requests.Session = requests.Session):
+    '''Graficar el historial de ventas y el histograma de precios de un cromo'''
+
+    X_buy, Y_buy, X_sell, Y_sell = get_card_sales_histogram(
+        '399430-Super%20Tinboy', session)
+    X, Y, _ = get_card_price_history(
+        '399430-Super%20Tinboy', session, since=datetime.date(2021, 6, 1))
+
+    ax = setup_subplots()
+
+    ax[0].plot(X, Y, color='#688F3E')
+
+    ax[1].fill_between(X_buy, Y_buy, step='post',
+                       color='#6B8FC3', alpha=0.9, lw=1.5)
+    ax[1].fill_between(X_sell, Y_sell, step='post',
+                       color='#688F3E', alpha=0.9, lw=1.5)
+
+    plt.show()
