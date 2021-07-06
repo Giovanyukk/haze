@@ -4,6 +4,7 @@ import requests
 
 import pandas as pd
 from lxml import html
+from bs4 import BeautifulSoup
 
 from classes import Game
 
@@ -132,11 +133,13 @@ def get_appid_list(maxprice=16):
 def get_card_price_history(market_hash_name: str, session: requests.Session = requests.Session):
     '''Obtener el historial de precios de un cromo
 
-    Retorna: X, Y, N (listas)
+    Retorna: X, Y, N
 
     X: Fechas [datetime]
     Y: Precios [float]
     N: Cantidad vendidos [int]
+
+    1 REQUEST
     '''
 
     response = session.get(
@@ -158,3 +161,49 @@ def get_card_price_history(market_hash_name: str, session: requests.Session = re
     else:
         raise ValueError(
             f'Hubo un error al obtener el historial de precios del cromo {market_hash_name}')
+
+
+def get_card_sales_histogram(market_hash_name: str, session: requests.Session = requests.Session):
+    '''Obtener el histograma de oferta/demanda de un cromo
+
+    Retorna: X_buy, Y_buy, X_sell, Y_sell
+
+    X_buy: Precio de compra [float]
+    Y_buy: Cantidad de ordenes de compra [int]
+    X_sell: Precio de venta [float]
+    Y_sell: Cantidad de ordenes de venta [int]
+
+    2 REQUESTS
+    '''
+
+    response = session.get(
+        f'https://steamcommunity.com/market/listings/753/{market_hash_name}/?currency=34&country=AR')
+    html = response.text
+    soup = BeautifulSoup(html, 'html.parser')
+    last_script = str(soup.find_all('script')[-1])
+    last_script_token = last_script.split('(')[-1]
+    item_nameid = last_script_token.split(');')[0]
+
+    response = session.get(
+        f'https://steamcommunity.com/market/itemordershistogram?country=AR&language=spanish&currency=34&item_nameid={item_nameid}&two_factor=0')
+    json = response.json()
+
+    X_buy: list[float]
+    Y_buy: list[int]
+    X_sell: list[float]
+    Y_sell: list[int]
+
+    if(json['success'] == 1):
+        X_buy = [json['buy_order_graph'][i][0]
+                 for i in range(len(json['buy_order_graph']))]
+        Y_buy = [json['buy_order_graph'][i][1]
+                 for i in range(len(json['buy_order_graph']))]
+        X_sell = [json['sell_order_graph'][i][0]
+                  for i in range(len(json['sell_order_graph']))]
+        Y_sell = [json['sell_order_graph'][i][1]
+                  for i in range(len(json['sell_order_graph']))]
+
+        return X_buy, Y_buy, X_sell, Y_sell
+    else:
+        raise ValueError(
+            f'Hubo un error al obtener el histograma de oferta/demanda del cromo {market_hash_name}')
