@@ -27,7 +27,7 @@ if(not os.path.exists('database')):
 # Se crea un objeto usuario
 user = User()
 
-#
+# TODO: Iniciar ASF directamente desde Haze
 with open('./user.json', 'r') as f:
     try:
         asf_path = json.load(f)['asf_path']
@@ -55,14 +55,13 @@ menu = {}
 menu['1'] = 'Actualizar base de datos local'
 menu['2'] = 'Actualizar desde Steam'
 menu['3'] = 'ArchiSteamFarm'
-menu['4'] = 'Salir'
 
 os.system('cls')
 
 try:
     while(True):
         print('Ingrese una de las siguientes opciones:')
-        for entry in list(menu.keys())[0:-1]:
+        for entry in list(menu.keys()):
             print(f'\t({entry}) {menu[entry]}')
         print('\t(Enter) Salir')
 
