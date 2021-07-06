@@ -281,10 +281,3 @@ def plot_graphs(session: requests.Session = requests.Session):
                        color='#688F3E', alpha=0.9, lw=1.5)
 
     plt.show()
-
-
-def welcome_screen():
-    '''Imprimir el logo de Haze'''
-
-    fig = pyfiglet.figlet_format('Haze', font='isometric1')
-    print(fig)

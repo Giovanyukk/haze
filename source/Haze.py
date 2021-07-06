@@ -11,7 +11,7 @@ import ctypes
 import pandas as pd
 
 # Local application imports
-from functions import to_dataframe, save_database, delete_database, get_appid_list, welcome_screen
+from functions import to_dataframe, save_database, delete_database, get_appid_list
 from classes import User
 from ASF import idle_bot, cmd, wait_for_threads
 
@@ -21,7 +21,6 @@ VERSION = '0.10.0'
 ctypes.windll.kernel32.SetConsoleTitleW(f'Haze v{VERSION}')
 
 os.system('cls')
-welcome_screen()
 
 # Se inicializa el logger para el manejo de errores
 logging.basicConfig(filename='log.txt', level=logging.ERROR,
