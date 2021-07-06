@@ -19,9 +19,40 @@ data_structure = {header: [] for header in headers}
 
 
 class Game:
-    '''Datos de un juego'''
+    '''Contiene la informacion de un juego
 
-    def __init__(self, appid, session=requests, fast_mode=True):
+    Parametros
+    ----------
+    appid : int
+        AppID del juego
+    session : requests.Session
+        Objeto request.session por el cual se realizan las requests. Normalmente se utiliza la propiedad User.session
+    fast_mode : bool
+        Determina si se evitan las pausas entre requests
+
+    Atributos
+    ---------
+    appID : int
+        AppID del juego
+    name : str
+        Nombre del juego
+    price : float
+        Precio
+    min_profit : float
+        Retorno minimo
+    avg_profit : float
+        Retorno medio
+    med_profit : float
+        Retorno mediano
+    card_list : list[float]
+        Lista de precios de los cromos
+    last_updated : datetime.datetime
+        Fecha y hora de ultima actualización
+    session : request.Session
+        Sesión del usuario
+    '''
+
+    def __init__(self, appid: int, session: requests.Session = requests.Session, fast_mode: bool = True):
         self.appID = appid
         self.name = ''
         self.price = 0
@@ -110,9 +141,34 @@ class Game:
 
 class User:
     '''Crear un objeto usuario donde se almacenan los datos del mismo.
-    El inicio de sesion es automático'''
+    El inicio de sesion es automático
 
-    def __init__(self, username='', password='', dir='user.json'):
+    Parametros
+    ----------
+    username : str
+        Nombre de usuario
+    password : str
+        Contraseña
+    dir : str
+        Ruta del archivo de configuracion
+
+    Atributos
+    ---------
+    username : str
+        Nombre de usuario
+    password : str
+        Contraseña
+    steamID64 : str
+        SteamID64 del usuario de Steam
+    webAPIKey : str
+        Clave de web API del usuario de Steam
+    session : request.Session
+        Sesión del usuario
+    logged_on : bool
+        Indica si la sesion del usuario esta iniciada
+    '''
+
+    def __init__(self, username: str = '', password: str = '', dir: str = 'user.json'):
         self.username = username
         self.password = password
         self.steamID64 = ''
