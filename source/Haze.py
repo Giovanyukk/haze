@@ -5,6 +5,7 @@ import sys
 import logging
 import json
 import threading as thr
+import ctypes
 
 # Third party imports
 import pandas as pd
@@ -13,6 +14,11 @@ import pandas as pd
 from functions import to_dataframe, save_database, delete_database, get_appid_list
 from classes import User
 from ASF import idle_bot, cmd, wait_for_threads
+
+VERSION = '0.10.0'
+
+# Titulo de la ventana
+ctypes.windll.kernel32.SetConsoleTitleW(f'Haze v{VERSION}')
 
 os.system('cls')
 
@@ -127,10 +133,13 @@ try:
                 target=wait_for_threads, args=(threads,), daemon=True, name='ThreadManager')
             thread_manager.start()
             input('')
+            
             try:
                 cmd('exit')
             except:
                 pass
+            
+            ctypes.windll.kernel32.SetConsoleTitleW(f'Haze v{VERSION}')
             os.system('cls')
         else:
             break
