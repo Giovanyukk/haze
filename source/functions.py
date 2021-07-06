@@ -135,9 +135,9 @@ def get_card_price_history(market_hash_name: str, session: requests.Session = re
 
     Retorna: X, Y, N
 
-    X: Fechas [datetime]
-    Y: Precios [float]
-    N: Cantidad vendidos [int]
+    X: [datetime] Fechas
+    Y: [float] Precios
+    N: [int] Cantidad vendidos
 
     1 REQUEST
     '''
@@ -168,10 +168,10 @@ def get_card_sales_histogram(market_hash_name: str, session: requests.Session = 
 
     Retorna: X_buy, Y_buy, X_sell, Y_sell
 
-    X_buy: Precio de compra [float]
-    Y_buy: Cantidad de ordenes de compra [int]
-    X_sell: Precio de venta [float]
-    Y_sell: Cantidad de ordenes de venta [int]
+    X_buy: [float] Precio de compra
+    Y_buy: [int] Cantidad de ordenes de compra
+    X_sell: [float] Precio de venta
+    Y_sell: [int] Cantidad de ordenes de venta
 
     2 REQUESTS
     '''
