@@ -202,7 +202,8 @@ class User:
                 'Ingrese su contraseña: ') if self.password == '' else self.password
             self.login()
             data = {'username': self.username,
-                    'password': self.password}
+                    'password': self.password,
+                    'asf_path': ''}
             json.dump(data, usercfg)
 
     def login(self):
