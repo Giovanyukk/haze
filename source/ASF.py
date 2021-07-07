@@ -4,6 +4,9 @@ import requests
 from datetime import datetime
 from time import sleep
 
+#Third party imports
+from functions import trusty_sleep
+
 URL = 'http://127.0.0.1:1242'
 
 
@@ -40,12 +43,12 @@ def idle_bot(bot: str, ismain=False):
     '''Iniciar el algoritmo fast-mode para un bot
     Esta función esta diseñada para ser utilizada en paralelo al codigo principal con el modulo threading
     '''
-    sleep(10)
+    trusty_sleep(10)
 
     logged_on = get(f'Bot/{bot}')
     retries = 0
     while(not logged_on):
-        sleep(5)
+        trusty_sleep(5)
         logged_on = get(f'Bot/{bot}')
         retries += 1
         if(retries > 3):
@@ -65,7 +68,7 @@ def idle_bot(bot: str, ismain=False):
                 log(f'No se ha encontrado un bot con el nombre {bot}')
                 break
             log(f'{bot} - Buscando juegos con cromos restantes...')
-            sleep(10)
+            trusty_sleep(30)
             cmd(f'pause {bot}')
 
             games_to_farm = get(
@@ -83,7 +86,7 @@ def idle_bot(bot: str, ismain=False):
                     log(
                         f'{bot} - Farmeando {len(appids[:32])} juegos por 5 minutos')
                     cmd(f'play {bot} {",".join(list(map(str,appids[:32])))}')
-                    sleep(300)
+                    trusty_sleep(300)
                 else:
                     log(f'{bot} - Ningun juego llegó a las 3 horas aún')
                     remaining_time_hours = 3 - hours_played
@@ -96,19 +99,19 @@ def idle_bot(bot: str, ismain=False):
                         log(
                             f'{bot} - Farmeando {len(appids[:31])} juegos por {str(round(remaining_time_hours, 1))} horas')
                     cmd(f'play {bot} {",".join(list(map(str,appids[:32])))}')
-                    sleep(remaining_time_seconds)
+                    trusty_sleep(remaining_time_seconds)
             else:
                 log(f'{bot} - No hay juegos para farmear')
                 break
 
             log(f'{bot} - Pausando por 20 segundos')
             cmd(f'pause {bot}')
-            sleep(20)
+            trusty_sleep(20)
 
             for appid in appids:
                 log(f'{bot} - Farmeando {appid} por 7 segundos...')
                 cmd(f'play {bot} {appid}')
-                sleep(7)
+                trusty_sleep(7)
 
             if(ismain == False):
                 cmd(f'loot {bot}')

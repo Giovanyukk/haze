@@ -7,7 +7,7 @@ from lxml import html
 from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
 from matplotlib import dates, ticker
-import pyfiglet
+from time import time, sleep
 
 from classes import Game
 
@@ -281,3 +281,9 @@ def plot_graphs(session: requests.Session = requests.Session):
                        color='#688F3E', alpha=0.9, lw=1.5)
 
     plt.show()
+
+
+def trusty_sleep(seconds: float):
+    start = time()
+    while (time() - start < seconds):
+        sleep(seconds - (time() - start))
