@@ -6,7 +6,6 @@ import logging
 import json
 import threading as thr
 import ctypes
-import tkinter as tk
 
 # Third party imports
 import pandas as pd
