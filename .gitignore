@@ -136,3 +136,4 @@ user.json
 *.maFile
 logo.png
 /venv*/
+*.har
