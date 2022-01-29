@@ -17,6 +17,13 @@ El ejecutable debe ser colocado en un directorio propio, ya que en este se guard
 
 En el primer uso se solicitara el nombre de usuario y contraseña de Steam, los cuales se guardaran en el archivo **user.json**. Si se desea iniciar sesión con otro usuario, este archivo debe ser eliminado.
 
-A partir de la version 0.8.0 ya *no* es necesaria la instalacion de *Node.js* para la ejecución del programa.
+## Compilación
+
+Compilar con Python 3.10
+
+`python -m pip install -r .\requirements.txt`
+`pyinstaller -i .\logo.ico --clean --onefile .\source\Haze.py`
+
+El ejecutable será guardado en la carpeta *dist*
 
 [![Invitame un cafecito](https://cdn.cafecito.app/imgs/buttons/button_1.svg)](https://cafecito.app/enzosanchezc)
