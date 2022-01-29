@@ -7,3 +7,4 @@ requests
 bs4
 matplotlib
 google-api-python-client
+pyinstaller
