@@ -22,6 +22,7 @@ En el primer uso se solicitara el nombre de usuario y contraseña de Steam, los 
 Compilar con Python 3.10
 
 `python -m pip install -r .\requirements.txt`
+
 `pyinstaller -i .\logo.ico --clean --onefile .\source\Haze.py`
 
 El ejecutable será guardado en la carpeta *dist*
