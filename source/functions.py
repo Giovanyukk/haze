@@ -31,7 +31,7 @@ def to_dataframe(appID: list, session: requests.Session):
         game_df = pd.DataFrame.from_dict(
             {headers[j]: game_data[j] for j in range(len(game_data))})
         # Agrega el i-ésimo juego a la base de datos auxiliar
-        database = database.append(game_df, ignore_index=True)
+        database = database.concat(game_df, ignore_index=True)
 
         os.system('cls')
         # Imprime el número de juego / número de juegos totales
