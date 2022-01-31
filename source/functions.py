@@ -31,7 +31,7 @@ def to_dataframe(appID: list, session: requests.Session):
         game_df = pd.DataFrame.from_dict(
             {headers[j]: game_data[j] for j in range(len(game_data))})
         # Agrega el i-ésimo juego a la base de datos auxiliar
-        pd.concat([database, game_df], ignore_index=True)
+        database = pd.concat([database, game_df], ignore_index=True)
 
         os.system('cls')
         # Imprime el número de juego / número de juegos totales
@@ -100,7 +100,7 @@ def delete_database():
         print('No existe base de datos.')
 
 
-def get_appid_list(maxprice=16):
+def get_appid_list(maxprice=6.99):
     '''Obtener los appids de los juegos con precio inferior a maxprice
 
     Retorna: appid_list
@@ -121,7 +121,7 @@ def get_appid_list(maxprice=16):
         price_list = [x[5:].replace(',', '.') for x in [
             y.rstrip() for y in price_list] if x not in ['']]
         price_list = [float(x) if x != '' else 0 for x in price_list]
-        if any(float(x) > 16 for x in price_list):
+        if any(float(x) > maxprice for x in price_list):
             try:
                 appid_list += tree.xpath('//a[@data-ds-appid]/@data-ds-appid')[
                     :price_list.index(next(filter(lambda x: x > maxprice, price_list), None)) + 1]

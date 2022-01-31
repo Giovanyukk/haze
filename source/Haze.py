@@ -75,8 +75,8 @@ try:
         option = input('Opción: ')
         if(option == '1'):
             if(database['AppID'].tolist() != [] and os.path.isfile('database/main.csv')):
-                database = database.append(to_dataframe(
-                    database['AppID'].tolist(), user.session), ignore_index=True)
+                database = pd.concat([database, to_dataframe(
+                    database['AppID'].tolist(), user.session)], ignore_index=True)
                 save_database(database)
             else:
                 os.system('cls')
@@ -95,12 +95,12 @@ try:
                     len(games_data['response']['games']))]
                 appid_list = [x for x in appid_list if int(
                     x) not in owned_games_list]
-                database = database.append(to_dataframe(
-                    appid_list, user.session), ignore_index=True)
+                database = pd.concat([database, to_dataframe(
+                    appid_list, user.session)], ignore_index=True)
                 save_database(database)
             else:
-                database = database.append(to_dataframe(
-                    appid_list, user.session), ignore_index=True)
+                database = pd.concat([database, to_dataframe(
+                    appid_list, user.session)], ignore_index=True)
                 save_database(database)
         elif(option == '3'):
             os.system('cls')
