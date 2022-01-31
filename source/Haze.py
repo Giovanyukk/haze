@@ -15,7 +15,7 @@ from functions import to_dataframe, save_database, delete_database, get_appid_li
 from classes import User
 from ASF import idle_bot, cmd, wait_for_threads
 
-VERSION = '0.10.0'
+VERSION = '0.10.1'
 
 # Titulo de la ventana
 ctypes.windll.kernel32.SetConsoleTitleW(f'Haze v{VERSION}')
