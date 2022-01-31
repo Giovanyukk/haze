@@ -100,7 +100,7 @@ def delete_database():
         print('No existe base de datos.')
 
 
-def get_appid_list(maxprice=6.99):
+def get_appid_list(maxprice=16):
     '''Obtener los appids de los juegos con precio inferior a maxprice
 
     Retorna: appid_list
