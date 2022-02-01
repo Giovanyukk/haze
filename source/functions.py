@@ -39,10 +39,13 @@ def to_dataframe(appID: list, session: requests.Session):
         # Imprime la información del juego siendo analizado actualmente
         game_df.drop(columns=['Lista de cromos',
                               'Ultima actualización'], inplace=True)
-        print(game_df)
+        print(game_df.to_string(index=False))
+        # Imprime el top 5 de los juegos más rentables
+        print(database.sort_values('Retorno mínimo', ascending=False,
+              ignore_index=True).head(5).to_string(index=False))
     os.system('cls')
     print(database.drop(columns=['Lista de cromos', 'Ultima actualización']).sort_values(
-        'Retorno mínimo', ascending=False, ignore_index=True).head())
+        'Retorno mínimo', ascending=False, ignore_index=True).head().to_string(index=False))
     return database
 
 
