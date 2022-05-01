@@ -26,5 +26,3 @@ Compilar con Python 3.10
 `pyinstaller -i .\logo.ico --clean --onefile .\source\Haze.py --hidden-import=xlsxwriter`
 
 El ejecutable será guardado en la carpeta *dist*
-
-[![Invitame un cafecito](https://cdn.cafecito.app/imgs/buttons/button_1.svg)](https://cafecito.app/enzosanchezc)
