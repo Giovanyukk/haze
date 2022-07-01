@@ -1,6 +1,7 @@
 import datetime
 import os
 import requests
+import curses
 
 import pandas as pd
 from lxml import html
@@ -17,7 +18,7 @@ headers = ['Nombre', 'Precio', 'Retorno mínimo', 'Retorno medio', 'Retorno medi
 data_structure = {header: [] for header in headers}
 
 
-def to_dataframe(appID: list, session: requests.Session):
+def to_dataframe(appID: list, session: requests.Session, stdscr: curses.window = None):
     '''Transformar una lista de appIDs en un dataframe con los respectivos juegos y retornarlo'''
     # Se crea una base de datos auxiliar
     database = pd.DataFrame.from_dict(data_structure)
@@ -33,18 +34,20 @@ def to_dataframe(appID: list, session: requests.Session):
         # Agrega el i-ésimo juego a la base de datos auxiliar
         database = pd.concat([database, game_df], ignore_index=True)
 
-        os.system('cls')
-        # Imprime el número de juego / número de juegos totales
-        print(f'{str(i+1)}/{str(len(appID))}')
-        # Imprime la información del juego siendo analizado actualmente
-        game_df.drop(columns=['Lista de cromos',
-                              'Ultima actualización'], inplace=True)
-        print(game_df.to_string(index=False))
-        # Imprime el top 5 de los juegos más rentables
-        print(database.sort_values('Retorno mínimo', ascending=False,
-              ignore_index=True).head(5).to_string(index=False))
-    os.system('cls')
-    print(database.drop(columns=['Lista de cromos', 'Ultima actualización']).sort_values(
+        if stdscr != None:
+            stdscr.clear()
+            # Imprime el número de juego / número de juegos totales
+            stdscr.addstr(f'{str(i+1)}/{str(len(appID))}')
+            game_df.drop(columns=['Lista de cromos',
+                                  'Ultima actualización'], inplace=True)
+            # Imprime la información del juego siendo analizado actualmente
+            stdscr.addstr(2, 0, game_df.to_string(index=False))
+            # Imprime el top 5 de los juegos más rentables
+            stdscr.addstr(4, 0, database.sort_values('Retorno mínimo', ascending=False,
+                                                     ignore_index=True).head(5).to_string(index=False))
+            stdscr.refresh()
+    stdscr.clear()
+    stdscr.addstr(0, 0, database.drop(columns=['Lista de cromos', 'Ultima actualización']).sort_values(
         'Retorno mínimo', ascending=False, ignore_index=True).head().to_string(index=False))
     return database
 
@@ -96,11 +99,8 @@ def delete_database():
             os.remove('database/main.xlsx')
         except:
             pass
-        os.system('cls')
-        print('Se eliminó la base de datos.')
     else:
-        os.system('cls')
-        print('No existe base de datos.')
+        pass
 
 
 def get_appid_list(maxprice=16):
@@ -290,3 +290,107 @@ def trusty_sleep(seconds: float):
     start = time()
     while (time() - start < seconds):
         sleep(seconds - (time() - start))
+
+
+def print_center(stdscr, text: str):
+    '''Imprimir un texto centrado en la pantalla'''
+
+    stdscr.clear()
+    stdscr.addstr(stdscr.getmaxyx()[0]//2, stdscr.getmaxyx()[1]//2 - len(text)//2, text)
+    stdscr.refresh()
+
+
+def print_menu(stdscr: curses.window, menu: list[str], selected_row_idx: int = 0, logo: str = None, title: str = None):
+    '''Imprimir un menú en la pantalla'''
+
+    stdscr.clear()
+    lines = stdscr.getmaxyx()[0]
+    cols = stdscr.getmaxyx()[1]
+    if logo != None:
+        x_free = cols - len(logo.split('\n')[0]) - len(max(menu, key=len))
+        y_free = lines - len(logo.split('\n')) - len(menu)
+
+    if logo != None and x_free >= 3 and lines >= max((len(menu), len(logo.split('\n')))) + 2:
+        for idx, row in enumerate(logo.split('\n')):
+            x = x_free//3
+            y = lines//2 - len(logo.split('\n'))//2 + idx
+            stdscr.addstr(y, x, row)
+        for idx, row in enumerate(menu):
+            x = 2*(x_free//3) + len(logo.split('\n')
+                                    [0]) + len(max(menu, key=len))//2 - len(row)//2
+            y = lines//2 - len(menu)//2 + idx
+            if idx == selected_row_idx:
+                stdscr.attron(curses.color_pair(
+                    2 if idx == len(menu) - 1 else 1))
+                stdscr.addstr(y, x, row)
+                stdscr.attroff(curses.color_pair(
+                    2 if idx == len(menu) - 1 else 1))
+            else:
+                stdscr.addstr(y, x, row)
+    elif logo != None and y_free >= 3:
+        for idx, row in enumerate(logo.split('\n')):
+            x = cols//2 - len(row)//2
+            y = y_free//3 + idx
+            stdscr.addstr(y, x, row)
+        for idx, row in enumerate(menu):
+            x = cols//2 - len(row)//2
+            y = 2*(y_free//3) + len(logo.split('\n')) + idx
+            if idx == selected_row_idx:
+                stdscr.attron(curses.color_pair(
+                    2 if idx == len(menu) - 1 else 1))
+                stdscr.addstr(y, x, row)
+                stdscr.attroff(curses.color_pair(
+                    2 if idx == len(menu) - 1 else 1))
+            else:
+                stdscr.addstr(y, x, row)
+    elif lines > len(menu) + (2 if title == None else 3) and cols > len(max(menu, key=len)):
+        if title != None:
+            stdscr.addstr(lines//2 - len(menu)//2 - 1,
+                          cols//2 - len(title)//2, title)
+        for idx, row in enumerate(menu):
+            x = cols//2 - len(row)//2
+            y = lines//2 - len(menu)//2 + idx
+            if idx == selected_row_idx:
+                stdscr.attron(curses.color_pair(
+                    2 if idx == len(menu) - 1 else 1))
+                stdscr.addstr(y, x, row)
+                stdscr.attroff(curses.color_pair(
+                    2 if idx == len(menu) - 1 else 1))
+            else:
+                stdscr.addstr(y, x, row)
+    else:
+        try:
+            stdscr.attron(curses.color_pair(2))
+            stdscr.addstr(lines//2, cols//2 - 14,
+                          'No se puede mostrar el menu!')
+        except:
+            stdscr.attron(curses.color_pair(2))
+            stdscr.addstr(lines//2, cols//2, '!')
+
+    stdscr.refresh()
+
+
+def create_menu(stdscr, menu: list[str], current_row: int = 0, logo=None, title=None):
+    '''Crear un menú en la pantalla'''
+
+    while True:
+        print_menu(stdscr, menu, current_row, logo, title)
+        key = stdscr.getch()
+
+        if key == curses.KEY_UP:
+            if current_row > 0:
+                current_row -= 1
+            else:
+                current_row = len(menu) - 1
+        elif key == curses.KEY_DOWN:
+            if current_row < len(menu) - 1:
+                current_row += 1
+            else:
+                current_row = 0
+        elif key == curses.KEY_ENTER or key in [10, 13]:
+            # if user selected last row, exit the program
+            if current_row == len(menu) - 1:
+                break
+            break
+    # Retorna la opción seleccionada
+    return current_row

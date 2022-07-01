@@ -6,21 +6,27 @@ import logging
 import json
 import threading as thr
 import ctypes
+import curses
+from matplotlib.pyplot import title
 
 # Third party imports
 import pandas as pd
 
 # Local application imports
-from functions import to_dataframe, save_database, delete_database, get_appid_list
+from functions import to_dataframe, save_database, delete_database, get_appid_list, create_menu, print_center
 from classes import User
 from ASF import idle_bot, cmd, wait_for_threads
 
-VERSION = '0.10.1'
+VERSION = '0.11.0'
 
 # Titulo de la ventana
 ctypes.windll.kernel32.SetConsoleTitleW(f'Haze v{VERSION}')
 
-os.system('cls')
+stdscr = curses.initscr()
+curses.noecho()
+curses.cbreak()
+stdscr.keypad(True)
+stdscr.clear()
 
 # Se inicializa el logger para el manejo de errores
 logging.basicConfig(filename='log.txt', level=logging.ERROR,
@@ -48,61 +54,85 @@ else:
     # Si no existe, se crea una dataframe temporal
     database = pd.DataFrame.from_dict(data_structure)
 
+logo = '''      ___           ___           ___           ___      
+     /\__\         /\  \         /\  \         /\  \     
+    /:/  /        /::\  \        \:\  \       /::\  \    
+   /:/__/        /:/\:\  \        \:\  \     /:/\:\  \   
+  /::\  \ ___   /::\~\:\  \        \:\  \   /::\~\:\  \  
+ /:/\:\  /\__\ /:/\:\ \:\__\ _______\:\__\ /:/\:\ \:\__\ 
+ \/__\:\/:/  / \/__\:\/:/  / \::::::::/__/ \:\~\:\ \/__/ 
+      \::/  /       \::/  /   \:\~~\~~      \:\ \:\__\   
+      /:/  /        /:/  /     \:\  \        \:\ \/__/   
+     /:/  /        /:/  /       \:\__\        \:\__\     
+     \/__/         \/__/         \/__/         \/__/     
+'''
+
 # Entradas del menu principal
-menu = {}
-menu['1'] = 'Actualizar base de datos local'
-menu['2'] = 'Actualizar desde Steam'
-menu['3'] = 'ArchiSteamFarm'
+menu = ['Actualizar desde Steam', 'Actualizar base de datos local',
+        'ArchiSteamFarm', 'Salir']
 
-os.system('cls')
-
-# TODO: Iniciar ASF directamente desde Haze
 with open('./user.json', 'r') as f:
     try:
         asf_path = json.load(f)['asf_path']
     except:
-        print('No se ha definido la ruta del ejecutable de ArchiSteamFarm. Puede definirla editando el archivo user.json')
+        stdscr.addstr(
+            'No se ha definido la ruta del ejecutable de ArchiSteamFarm. Puede definirla editando el archivo user.json')
+        stdscr.refresh()
         asf_path = None
 
-try:
-    while(True):
-        # Se imprime el menu principal
-        print('Ingrese una de las siguientes opciones:')
-        for entry in list(menu.keys()):
-            print(f'\t({entry}) {menu[entry]}')
-        print('\t(Enter) Salir')
+# Desactivar el parpadeo del cursor
+curses.curs_set(0)
 
-        option = input('Opción: ')
-        if(option == '1'):
+# Esquema de colores para la fila seleccionada
+curses.start_color()
+curses.use_default_colors()
+curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
+curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_RED)
+
+# Imprimir el menu
+#print_menu(stdscr, menu, current_row, logo)
+
+try:
+    while True:
+        # Se imprime el menu principal
+        option = create_menu(stdscr, menu, 0, logo)
+
+        if(option == 0):
+            # Actualizar desde Steam
+            print_center(stdscr, 'Borrando base de datos...')
+            delete_database()
+            database = pd.DataFrame.from_dict(data_structure)
+            print_center(stdscr, 'Obteniendo lista de juegos...')
+            appid_list = get_appid_list()
+            # Da la opcion de omitir los juegos que ya estan comprados
+            if(user.webAPIKey != ''):
+                if create_menu(stdscr, ['Si', 'No'], title = 'Omitir juegos que ya estan en la biblioteca?') == 1: break
+                stdscr.clear()
+                owned_games_URL = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=' + \
+                    user.webAPIKey + '&steamid=' + \
+                    str(user.steamID64) + '&format=json'
+                games_data = user.session.get(
+                    owned_games_URL).json()['response']
+                owned_games_list = [int(games_data['games'][x]['appid']) for x in range(
+                    len(games_data['games']))]
+                appid_list = [x for x in appid_list if int(
+                    x) not in owned_games_list]
+                database = pd.concat([database, to_dataframe(
+                    appid_list, user.session, stdscr)], ignore_index=True)
+                save_database(database)
+            else:
+                database = pd.concat([database, to_dataframe(
+                    appid_list, user.session, stdscr)], ignore_index=True)
+                save_database(database)
+        elif(option == 1):
             if(database['AppID'].tolist() != [] and os.path.isfile('database/main.csv')):
                 database = pd.concat([database, to_dataframe(
-                    database['AppID'].tolist(), user.session)], ignore_index=True)
+                    database['AppID'].tolist(), user.session, stdscr)], ignore_index=True)
                 save_database(database)
             else:
                 os.system('cls')
                 print('La base de datos no existe o está vacia.')
-        elif(option == '2'):
-            delete_database()
-            database = pd.DataFrame.from_dict(data_structure)
-            appid_list = get_appid_list()
-            # Da la opcion de omitir los juegos que ya estan comprados
-            if(user.webAPIKey != '' and (input('Omitir juegos que ya estan en mi biblioteca? (Y/n) ') or 'y') == 'y'):
-                owned_games_URL = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=' + \
-                    user.webAPIKey + '&steamid=' + \
-                    str(user.steamID64) + '&format=json'
-                games_data = user.session.get(owned_games_URL).json()
-                owned_games_list = [int(games_data['response']['games'][x]['appid']) for x in range(
-                    len(games_data['response']['games']))]
-                appid_list = [x for x in appid_list if int(
-                    x) not in owned_games_list]
-                database = pd.concat([database, to_dataframe(
-                    appid_list, user.session)], ignore_index=True)
-                save_database(database)
-            else:
-                database = pd.concat([database, to_dataframe(
-                    appid_list, user.session)], ignore_index=True)
-                save_database(database)
-        elif(option == '3'):
+        elif(option == 2):
             os.system('cls')
             bots = []
             while(len(bots) == 0):
@@ -142,10 +172,22 @@ try:
             ctypes.windll.kernel32.SetConsoleTitleW(f'Haze v{VERSION}')
             os.system('cls')
         else:
+            curses.nocbreak()
+            stdscr.keypad(False)
+            curses.echo()
+            curses.endwin()
             break
 # Salvo que el programa se cierre de forma inesperada, se guardan los detalles en el logger antes de cerrarse
 except KeyboardInterrupt:
+    curses.nocbreak()
+    stdscr.keypad(False)
+    curses.echo()
+    curses.endwin()
     sys.exit()
 except Exception as e:
+    curses.nocbreak()
+    stdscr.keypad(False)
+    curses.echo()
+    curses.endwin()
     logging.error(e)
     sys.exit()
