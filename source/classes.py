@@ -1,8 +1,10 @@
 import os
 import json
+import sys
 from time import sleep
 from datetime import datetime
 import requests
+import curses
 
 import numpy as np
 import pandas as pd
@@ -16,6 +18,20 @@ headers = ['Nombre', 'Precio', 'Retorno mínimo', 'Retorno medio', 'Retorno medi
            'AppID', 'Lista de cromos', 'Ultima actualización']  # Nombres de las columnas
 # Se crea un diccionario con la estructura de la base de datos
 data_structure = {header: [] for header in headers}
+
+
+def print_center(stdscr, text: str):
+    '''Imprimir un texto centrado en la pantalla'''
+
+    stdscr.clear()
+    if len(text.split('\n')) > 1:
+        for idx, line in enumerate(text.split('\n')):
+            stdscr.addstr(stdscr.getmaxyx()[
+                          0]//2 - len(text.split('\n')) + idx, stdscr.getmaxyx()[1]//2 - len(line)//2, line)
+    else:
+        stdscr.addstr(stdscr.getmaxyx()[
+                      0]//2, stdscr.getmaxyx()[1]//2 - len(text)//2, text)
+    stdscr.refresh()
 
 
 class Game:
@@ -168,16 +184,21 @@ class User:
         Indica si la sesion del usuario esta iniciada
     '''
 
-    def __init__(self, username: str = '', password: str = '', dir: str = 'user.json'):
+    def __init__(self, username: str = '', password: str = '', dir: str = 'user.json', stdscr: curses.window = None):
         self.username = username
         self.password = password
         self.steamID64 = ''
         self.webAPIKey = ''
         self.session = ''
         self.logged_on = False
+        self.stdscr = stdscr
+        self.email_code = ''
+        self.twofactor_code = ''
 
         if(os.path.isfile(dir)):
-            self.load(dir)
+            if not self.load(dir):
+                os.remove('user.json')
+                self.create(dir)
         else:
             self.create(dir)
 
@@ -187,19 +208,44 @@ class User:
                 data = json.load(usercfg)
                 self.username = data['username']
                 self.password = data['password']
+                if self.username == '' or self.password == '':
+                    raise Exception()
                 self.login()
+            return True
         except:
-            print(
-                'Archivo de configuración inválido. Por favor eliminelo y reinicie el programa\n')
+            if self.stdscr != None:
+                print_center(
+                    self.stdscr, 'Archivo de configuración inválido.\nSe autoeliminará y se intentará crear uno nuevo.')
+                sleep(2)
+            else:
+                print(
+                    'Archivo de configuración inválido.\nSe autoeliminará y se intentará crear uno nuevo.')
+                sleep(2)
+            return False
 
     def create(self, dir='user.json'):
         with open(dir, 'w', encoding='utf-8') as usercfg:
-            print('Se creará un archivo de configuracion en el directorio del programa')
-            print('Para poder omitir los juegos que ya están en su biblioteca, deberá activar la Steam API Key desde la página web de Steam')
-            self.username = input(
-                'Ingrese su nombre de usuario: ') if self.username == '' else self.username
-            self.password = input(
-                'Ingrese su contraseña: ') if self.password == '' else self.password
+            if self.stdscr != None:
+                print_center(self.stdscr, 'Se creará un archivo de configuracion en el directorio del programa.\nPara poder omitir los juegos que ya están en su biblioteca,\ndeberá activar la Steam API Key desde la página web de Steam')
+            else:
+                print('Se creará un archivo de configuracion en el directorio del programa.\nPara poder omitir los juegos que ya están en su biblioteca,\ndeberá activar la Steam API Key desde la página web de Steam')
+            if self.username == '' or self.password == '':
+                self.stdscr.addstr(self.stdscr.getmaxyx()[
+                                   0]//2 + 3, self.stdscr.getmaxyx()[1]//2 - 35, 'Ingrese su nombre de usuario: ')
+                self.stdscr.addstr(self.stdscr.getmaxyx()[
+                                   0]//2 + 4, self.stdscr.getmaxyx()[1]//2 - 28, 'Ingrese su contraseña: ')
+                curses.echo()
+                curses.nocbreak()
+                curses.curs_set(1)
+                self.stdscr.refresh()
+                self.username = self.stdscr.getstr(
+                    self.stdscr.getmaxyx()[0]//2 + 3, self.stdscr.getmaxyx()[1]//2 - 5).decode(encoding="utf-8")
+                self.password = self.stdscr.getstr(
+                    self.stdscr.getmaxyx()[0]//2 + 4, self.stdscr.getmaxyx()[1]//2 - 5).decode(encoding="utf-8")
+                curses.noecho()
+                curses.cbreak()
+                curses.curs_set(0)
+
             self.login()
             data = {'username': self.username,
                     'password': self.password,
@@ -208,14 +254,67 @@ class User:
 
     def login(self):
         user = wa.WebAuth(self.username)
-
-        if(os.path.isfile('2FA.maFile')):
-            with open('2Fa.maFile', 'r') as f:
-                data = json.load(f)
-            self.session = user.cli_login(
-                self.password, twofactor_code=guard.SteamAuthenticator(secrets=data).get_code())
-        else:
-            self.session = user.cli_login(self.password)
+        while user.logged_on == False:
+            try:
+                user = wa.WebAuth(self.username)
+                if(os.path.isfile('2FA.maFile')):
+                    with open('2FA.maFile', 'r') as f:
+                        data = json.load(f)
+                    self.session = user.login(
+                        self.password, twofactor_code=guard.SteamAuthenticator(secrets=data).get_code())
+                else:
+                    self.session = user.login(
+                        self.password, email_code=self.email_code, twofactor_code=self.twofactor_code)
+            except wa.TwoFactorCodeRequired:
+                self.stdscr.addstr(self.stdscr.getmaxyx()[
+                    0]//2 + 5, self.stdscr.getmaxyx()[1]//2 - 28, 'Ingrese el código 2FA: ' + ' ' * len(self.twofactor_code))
+                self.stdscr.refresh()
+                curses.echo()
+                curses.nocbreak()
+                curses.curs_set(1)
+                self.email_code = ''
+                self.twofactor_code = self.stdscr.getstr(self.stdscr.getmaxyx()[
+                    0]//2 + 5, self.stdscr.getmaxyx()[1]//2 - 5).decode(encoding="utf-8").strip()
+                curses.noecho()
+                curses.cbreak()
+                curses.curs_set(0)
+            except wa.EmailCodeRequired:
+                self.stdscr.addstr(self.stdscr.getmaxyx()[
+                    0]//2 + 5, self.stdscr.getmaxyx()[1]//2 - 28, 'Ingrese el código 2FA: ' + ' ' * len(self.email_code))
+                self.stdscr.refresh()
+                curses.echo()
+                curses.nocbreak()
+                curses.curs_set(1)
+                self.twofactor_code = ''
+                self.email_code = self.stdscr.getstr(self.stdscr.getmaxyx()[
+                    0]//2 + 5, self.stdscr.getmaxyx()[1]//2 - 5).decode(encoding="utf-8").strip()
+                curses.noecho()
+                curses.cbreak()
+                curses.curs_set(0)
+            except wa.LoginIncorrect:
+                self.stdscr.addstr(self.stdscr.getmaxyx()[
+                    0]//2 + 3, self.stdscr.getmaxyx()[1]//2 - 5, ' ' * len(self.username))
+                self.stdscr.addstr(self.stdscr.getmaxyx()[
+                    0]//2 + 4, self.stdscr.getmaxyx()[1]//2 - 5, ' ' * len(self.password))
+                curses.echo()
+                curses.nocbreak()
+                curses.curs_set(1)
+                self.stdscr.refresh()
+                self.username = self.stdscr.getstr(
+                    self.stdscr.getmaxyx()[0]//2 + 3, self.stdscr.getmaxyx()[1]//2 - 5).decode(encoding="utf-8")
+                self.password = self.stdscr.getstr(
+                    self.stdscr.getmaxyx()[0]//2 + 4, self.stdscr.getmaxyx()[1]//2 - 5).decode(encoding="utf-8")
+                curses.noecho()
+                curses.cbreak()
+                curses.curs_set(0)
+            except wa.TooManyLoginFailures:
+                print_center(self.stdscr, 'Demasiados intentos fallidos.\nPor favor, intente más tarde.')
+                sleep(5)
+                curses.nocbreak()
+                self.stdscr.keypad(False)
+                curses.echo()
+                curses.endwin()
+                sys.exit()
 
         if user.logged_on:
             self.steamID64 = user.steam_id.as_64
@@ -225,4 +324,8 @@ class User:
             self.webAPIKey = key[5:] if key[0] != 'R' else ''
             self.logged_on = True
         else:
-            print('No se ha podido iniciar sesión')
+            if self.stdscr != None:
+                print_center(self.stdscr, 'No se ha podido iniciar sesión')
+            else:
+                print(
+                    'No se ha podido iniciar sesión')

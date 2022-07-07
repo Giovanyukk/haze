@@ -7,7 +7,6 @@ import json
 import threading as thr
 import ctypes
 import curses
-from matplotlib.pyplot import title
 
 # Third party imports
 import pandas as pd
@@ -27,6 +26,14 @@ curses.noecho()
 curses.cbreak()
 stdscr.keypad(True)
 stdscr.clear()
+# Desactivar el parpadeo del cursor
+curses.curs_set(0)
+
+# Esquema de colores para la fila seleccionada
+curses.start_color()
+curses.use_default_colors()
+curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
+curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_RED)
 
 # Se inicializa el logger para el manejo de errores
 logging.basicConfig(filename='log.txt', level=logging.ERROR,
@@ -37,7 +44,7 @@ if(not os.path.exists('database')):
     os.makedirs('database')
 
 # Se crea un objeto usuario
-user = User()
+user = User(stdscr=stdscr)
 
 # Se centran los headers de la dataframe
 pd.set_option('colheader_justify', 'center')
@@ -80,18 +87,6 @@ with open('./user.json', 'r') as f:
         stdscr.refresh()
         asf_path = None
 
-# Desactivar el parpadeo del cursor
-curses.curs_set(0)
-
-# Esquema de colores para la fila seleccionada
-curses.start_color()
-curses.use_default_colors()
-curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
-curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_RED)
-
-# Imprimir el menu
-#print_menu(stdscr, menu, current_row, logo)
-
 try:
     while True:
         # Se imprime el menu principal
@@ -108,6 +103,7 @@ try:
             if(user.webAPIKey != ''):
                 if create_menu(stdscr, ['Si', 'No'], title = 'Omitir juegos que ya estan en la biblioteca?') == 1: break
                 stdscr.clear()
+                stdscr.refresh()
                 owned_games_URL = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=' + \
                     user.webAPIKey + '&steamid=' + \
                     str(user.steamID64) + '&format=json'
@@ -178,12 +174,6 @@ try:
             curses.endwin()
             break
 # Salvo que el programa se cierre de forma inesperada, se guardan los detalles en el logger antes de cerrarse
-except KeyboardInterrupt:
-    curses.nocbreak()
-    stdscr.keypad(False)
-    curses.echo()
-    curses.endwin()
-    sys.exit()
 except Exception as e:
     curses.nocbreak()
     stdscr.keypad(False)

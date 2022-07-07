@@ -296,7 +296,11 @@ def print_center(stdscr, text: str):
     '''Imprimir un texto centrado en la pantalla'''
 
     stdscr.clear()
-    stdscr.addstr(stdscr.getmaxyx()[0]//2, stdscr.getmaxyx()[1]//2 - len(text)//2, text)
+    if len(text.split('\n')) > 1:
+        for idx, line in enumerate(text.split('\n')):
+            stdscr.addstr(stdscr.getmaxyx()[0]//2 - len(text.split('\n')) + idx, stdscr.getmaxyx()[1]//2 - len(line)//2, line)
+    else:
+        stdscr.addstr(stdscr.getmaxyx()[0]//2, stdscr.getmaxyx()[1]//2 - len(text)//2, text)
     stdscr.refresh()
 
 
