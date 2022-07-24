@@ -2,7 +2,7 @@ El archivo README corresponde a la ultima versión del código, no de compilaci�
 
 # Haze
 
-Una herramienta para monitorear el retorno esperado de la compra de juegos y venta de cromos en la plataforma Steam.  
+Una herramienta para monitorear el retorno esperado de la compra de juegos y venta de cromos en la plataforma Steam.
 
 ## Integración con Steam
 Se puede utilizar la opcion **2** para generar una lista de juegos con precio menor a ARS$ 16. Esta lista es obtenida directamente de **Steam**.
@@ -21,8 +21,12 @@ En el primer uso se solicitara el nombre de usuario y contraseña de Steam, los 
 
 Compilar con Python 3.10
 
-`python -m pip install -r .\requirements.txt`
+### Windows
+	python -m pip install -r .\requirements.txt
+	pyinstaller -i .\logo.ico --clean --onefile .\source\Haze.py --hidden-import=xlsxwriter
 
-`pyinstaller -i .\logo.ico --clean --onefile .\source\Haze.py --hidden-import=xlsxwriter`
+### Linux
+	python -m pip install -r ./requirements.txt
+	pyinstaller -i ./logo.ico --clean --onefile ./source/Haze.py --hidden-import=xlsxwriter  
 
 El ejecutable será guardado en la carpeta *dist*
