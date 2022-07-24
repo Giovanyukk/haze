@@ -66,9 +66,11 @@ class Game:
         Fecha y hora de ultima actualización
     session : request.Session
         Sesión del usuario
+    stdscr : curses.window
+        Pantalla principal del programa
     '''
 
-    def __init__(self, appid: int, session: requests.Session = requests.Session, fast_mode: bool = True):
+    def __init__(self, appid: int, session: requests.Session = requests.Session, fast_mode: bool = True, stdscr: curses.window = None):
         self.appID = appid
         self.name = ''
         self.price = 0
@@ -78,6 +80,7 @@ class Game:
         self.card_list = []
         self.last_updated = ''
         self.session = session
+        self.stdscr = stdscr
         self.update(fast_mode)
 
     def update(self, fast_mode=True):
@@ -86,10 +89,14 @@ class Game:
         response = self.session.get(store_URL)
         # Si falla la solicitud, reintenta cada 5 segundos
         while(response.status_code != 200):
-            os.system('cls')
-            print('Error al actualizar el juego. Reintentando en 5 segundos...')
-            sleep(5)
-            os.system('cls')
+            if self.stdscr != None:
+                print_center(self.stdscr, 'Error al actualizar el juego. Reintentando en 5 segundos...')
+                sleep(5)
+            else:
+                os.system('cls')
+                print('Error al actualizar el juego. Reintentando en 5 segundos...')
+                sleep(5)
+                os.system('cls')
             response = self.session.get(store_URL)
 
         # Si la cantidad de appIDs ingresadas es mayor a 250, se reducen las requests por segundo para evitar error 503
@@ -138,10 +145,14 @@ class Game:
         response = self.session.get(cards_URL)
         # Si falla la solicitud, reintenta cada 5 segundos
         while(response.status_code != 200):
-            os.system('cls')
-            print('Error al actualizar el juego. Reintentando en 5 segundos...')
-            sleep(5)
-            os.system('cls')
+            if self.stdscr != None:
+                print_center(self.stdscr, 'Error al actualizar el juego. Reintentando en 5 segundos...')
+                sleep(5)
+            else:
+                os.system('cls')
+                print('Error al actualizar el juego. Reintentando en 5 segundos...')
+                sleep(5)
+                os.system('cls')
             response = self.session.get(cards_URL)
 
         cards_data = json.loads(response.text)
@@ -182,9 +193,15 @@ class User:
         Sesión del usuario
     logged_on : bool
         Indica si la sesion del usuario esta iniciada
+    stdscr: curses.window
+        Pantalla principal del programa
+    email_code : str
+        Codigo de verificacion de email
+    twofactor_code : str
+        Codigo de verificacion de 2FA
     '''
 
-    def __init__(self, username: str = '', password: str = '', dir: str = 'user.json', stdscr: curses.window = None):
+    def __init__(self, username: str = '', password: str = '', dir: str = 'user.json', stdscr: curses.window = None, session: requests.Session = None):
         self.username = username
         self.password = password
         self.steamID64 = ''

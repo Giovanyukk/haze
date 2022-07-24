@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
 from matplotlib import dates, ticker
 from time import time, sleep
+from curseXcel import Table
 
 from classes import Game
 
@@ -22,6 +23,14 @@ def to_dataframe(appID: list, session: requests.Session, stdscr: curses.window =
     '''Transformar una lista de appIDs en un dataframe con los respectivos juegos y retornarlo'''
     # Se crea una base de datos auxiliar
     database = pd.DataFrame.from_dict(data_structure)
+    if stdscr != None and stdscr.getmaxyx()[0] > 6:
+        table_column_width = stdscr.getmaxyx()[1] // (len(headers) - 2)
+        table = Table(stdscr, 7, len(headers) - 2, table_column_width,
+                      stdscr.getmaxyx()[1], stdscr.getmaxyx()[0], col_names=True)
+        table.cursor_down()
+        for idx, header in enumerate(headers[:-2]):
+            table.set_column_header(header.center(
+                stdscr.getmaxyx()[1] // (len(headers) - 2)), idx)
     for i in range(len(appID)):
         game = Game(appID[i], session)
         # Arma un array de arrays unidimensionales con los datos que se van a agregar
@@ -34,21 +43,21 @@ def to_dataframe(appID: list, session: requests.Session, stdscr: curses.window =
         # Agrega el i-ésimo juego a la base de datos auxiliar
         database = pd.concat([database, game_df], ignore_index=True)
 
-        if stdscr != None:
-            stdscr.clear()
-            # Imprime el número de juego / número de juegos totales
-            stdscr.addstr(f'{str(i+1)}/{str(len(appID))}')
-            game_df.drop(columns=['Lista de cromos',
-                                  'Ultima actualización'], inplace=True)
-            # Imprime la información del juego siendo analizado actualmente
-            stdscr.addstr(2, 0, game_df.to_string(index=False))
-            # Imprime el top 5 de los juegos más rentables
-            stdscr.addstr(4, 0, database.sort_values('Retorno mínimo', ascending=False,
-                                                     ignore_index=True).head(5).to_string(index=False))
-            stdscr.refresh()
-    stdscr.clear()
-    stdscr.addstr(0, 0, database.drop(columns=['Lista de cromos', 'Ultima actualización']).sort_values(
-        'Retorno mínimo', ascending=False, ignore_index=True).head().to_string(index=False))
+        if stdscr != None and stdscr.getmaxyx()[0] > 6:
+            top_df = database.drop(columns=['Lista de cromos',
+                                            'Ultima actualización']).sort_values('Retorno mínimo', ascending=False,
+                                                                                 ignore_index=True).head(5)
+            table.set_cell(1, 2, "TOP".center(table_column_width))
+            table.set_cell(
+                1, 3, f'{str(i+1)}/{str(len(appID))}'.center(table_column_width))
+            for j in range(len(headers) - 2):
+                table.set_cell(0, j, str(game_df.iloc[0, j]))
+                for k in range(2, 9):
+                    try:
+                        table.set_cell(k, j, str(top_df.iloc[k - 2, j]))
+                    except:
+                        pass
+            table.refresh()
     return database
 
 
@@ -298,9 +307,11 @@ def print_center(stdscr, text: str):
     stdscr.clear()
     if len(text.split('\n')) > 1:
         for idx, line in enumerate(text.split('\n')):
-            stdscr.addstr(stdscr.getmaxyx()[0]//2 - len(text.split('\n')) + idx, stdscr.getmaxyx()[1]//2 - len(line)//2, line)
+            stdscr.addstr(stdscr.getmaxyx()[
+                          0]//2 - len(text.split('\n')) + idx, stdscr.getmaxyx()[1]//2 - len(line)//2, line)
     else:
-        stdscr.addstr(stdscr.getmaxyx()[0]//2, stdscr.getmaxyx()[1]//2 - len(text)//2, text)
+        stdscr.addstr(stdscr.getmaxyx()[
+                      0]//2, stdscr.getmaxyx()[1]//2 - len(text)//2, text)
     stdscr.refresh()
 
 
@@ -398,3 +409,20 @@ def create_menu(stdscr, menu: list[str], current_row: int = 0, logo=None, title=
             break
     # Retorna la opción seleccionada
     return current_row
+
+
+def initscr():
+    stdscr = curses.initscr()
+    curses.noecho()
+    curses.cbreak()
+    stdscr.keypad(True)
+    stdscr.clear()
+    # Desactivar el parpadeo del cursor
+    curses.curs_set(0)
+
+    # Esquema de colores para la fila seleccionada
+    curses.start_color()
+    curses.use_default_colors()
+    curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
+    curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_RED)
+    return stdscr

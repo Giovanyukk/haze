@@ -12,28 +12,19 @@ import curses
 import pandas as pd
 
 # Local application imports
-from functions import to_dataframe, save_database, delete_database, get_appid_list, create_menu, print_center
+from functions import to_dataframe, save_database, delete_database, get_appid_list, create_menu, print_center, initscr
 from classes import User
 from ASF import idle_bot, cmd, wait_for_threads
 
 VERSION = '0.11.0'
 
 # Titulo de la ventana
-ctypes.windll.kernel32.SetConsoleTitleW(f'Haze v{VERSION}')
+if os.name == 'nt':
+    ctypes.windll.kernel32.SetConsoleTitleW(f'Haze v{VERSION}')
+elif os.name == 'posix':
+    print(f'\33]0;Haze v{VERSION}\a', end='', flush=True)
 
-stdscr = curses.initscr()
-curses.noecho()
-curses.cbreak()
-stdscr.keypad(True)
-stdscr.clear()
-# Desactivar el parpadeo del cursor
-curses.curs_set(0)
-
-# Esquema de colores para la fila seleccionada
-curses.start_color()
-curses.use_default_colors()
-curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
-curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_RED)
+stdscr = initscr()
 
 # Se inicializa el logger para el manejo de errores
 logging.basicConfig(filename='log.txt', level=logging.ERROR,
@@ -101,7 +92,8 @@ try:
             appid_list = get_appid_list()
             # Da la opcion de omitir los juegos que ya estan comprados
             if(user.webAPIKey != ''):
-                if create_menu(stdscr, ['Si', 'No'], title = 'Omitir juegos que ya estan en la biblioteca?') == 1: break
+                if create_menu(stdscr, ['Si', 'No'], title='Omitir juegos que ya estan en la biblioteca?') == 1:
+                    break
                 stdscr.clear()
                 stdscr.refresh()
                 owned_games_URL = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=' + \
@@ -120,16 +112,31 @@ try:
                 database = pd.concat([database, to_dataframe(
                     appid_list, user.session, stdscr)], ignore_index=True)
                 save_database(database)
+            print_center(
+                stdscr, 'Base de datos actualizada.\nPresione cualquier tecla para continuar...')
+            stdscr.getch()
         elif(option == 1):
             if(database['AppID'].tolist() != [] and os.path.isfile('database/main.csv')):
                 database = pd.concat([database, to_dataframe(
                     database['AppID'].tolist(), user.session, stdscr)], ignore_index=True)
                 save_database(database)
+                print_center(
+                    stdscr, 'Base de datos actualizada.\nPresione cualquier tecla para continuar...')
+                stdscr.getch()
             else:
-                os.system('cls')
-                print('La base de datos no existe o está vacia.')
+                stdscr.clear()
+                print_center(
+                    stdscr, 'La base de datos no existe o está vacia.\nPresione cualquier tecla para continuar...')
+                stdscr.getch()
         elif(option == 2):
-            os.system('cls')
+            curses.nocbreak()
+            stdscr.keypad(False)
+            curses.curs_set(1)
+            curses.echo()
+            curses.endwin()
+
+            os.system('cls' if os.name == 'nt' else 'clear')
+
             bots = []
             while(len(bots) == 0):
                 bots = [i.strip() for i in input(
@@ -165,8 +172,13 @@ try:
             except:
                 pass
 
-            ctypes.windll.kernel32.SetConsoleTitleW(f'Haze v{VERSION}')
-            os.system('cls')
+            if os.name == 'nt':
+                ctypes.windll.kernel32.SetConsoleTitleW(f'Haze v{VERSION}')
+            elif os.name == 'posix':
+                print(f'\33]0;Haze v{VERSION}\a', end='', flush=True)
+
+            os.system('cls' if os.name == 'nt' else 'clear')
+            stdscr = initscr()
         else:
             curses.nocbreak()
             stdscr.keypad(False)
