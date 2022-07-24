@@ -212,6 +212,18 @@ class User:
         self.email_code = ''
         self.twofactor_code = ''
 
+        if session != None:
+            if 'login' not in session.get('https://steamcommunity.com/dev/apikey').url.split('/'):
+                self.session = session
+                self.logged_on = True
+                self.steamID64 = html.fromstring(self.session.get('https://store.steampowered.com/account/').content).xpath('//*[@id="responsive_page_template_content"]/div[1]/div/div[2]')[0].text.split(' ')[3]
+                # https://steamcommunity.com/dev/apikey
+                # //*[@id="responsive_page_template_content"]/div[1]/div/div[2]
+                key = html.fromstring(self.session.get(
+                    'https://steamcommunity.com/dev/apikey').content).xpath('//*[@id="bodyContents_ex"]/p[1]/text()')[0]
+                self.webAPIKey = key.split(' ')[1] if key[0] != 'R' else ''
+                return
+
         if(os.path.isfile(dir)):
             if not self.load(dir):
                 os.remove('user.json')

@@ -7,12 +7,13 @@ import json
 import threading as thr
 import ctypes
 import curses
+import requests
 
 # Third party imports
 import pandas as pd
 
 # Local application imports
-from functions import to_dataframe, save_database, delete_database, get_appid_list, create_menu, print_center, initscr
+from functions import to_dataframe, save_database, delete_database, get_appid_list, create_menu, print_center, save_cookies, load_cookies, initscr
 from classes import User
 from ASF import idle_bot, cmd, wait_for_threads
 
@@ -34,8 +35,15 @@ logging.basicConfig(filename='log.txt', level=logging.ERROR,
 if(not os.path.exists('database')):
     os.makedirs('database')
 
-# Se crea un objeto usuario
-user = User(stdscr=stdscr)
+# Se intenta cargar la sesión de usuario desde el archivo de sesión session.pkl
+# Si no existe el archivo o la sesión expiró, se crea un objeto usuario
+try:
+    session = requests.session()
+    session.cookies = load_cookies('session.pkl')
+    user = User(session=session, stdscr=stdscr)
+except:
+    user = User(stdscr=stdscr)
+    save_cookies(user.session.cookies, 'session.pkl')
 
 # Se centran los headers de la dataframe
 pd.set_option('colheader_justify', 'center')

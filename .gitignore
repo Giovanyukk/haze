@@ -138,3 +138,4 @@ logo.png
 /venv*/
 *.har
 .pylintrc
+session.pkl

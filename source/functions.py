@@ -2,6 +2,7 @@ import datetime
 import os
 import requests
 import curses
+import pickle
 
 import pandas as pd
 from lxml import html
@@ -32,7 +33,7 @@ def to_dataframe(appID: list, session: requests.Session, stdscr: curses.window =
             table.set_column_header(header.center(
                 stdscr.getmaxyx()[1] // (len(headers) - 2)), idx)
     for i in range(len(appID)):
-        game = Game(appID[i], session)
+        game = Game(appID[i], session, stdscr=stdscr)
         # Arma un array de arrays unidimensionales con los datos que se van a agregar
         game_data = [[game.name], [game.price], [game.min_profit], [game.avg_profit], [
             game.med_profit], [game.appID], [game.card_list], [game.last_updated]]
@@ -426,3 +427,13 @@ def initscr():
     curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
     curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_RED)
     return stdscr
+
+
+def save_cookies(requests_cookiejar, filename):
+    with open(filename, 'wb') as f:
+        pickle.dump(requests_cookiejar, f)
+
+
+def load_cookies(filename):
+    with open(filename, 'rb') as f:
+        return pickle.load(f)
