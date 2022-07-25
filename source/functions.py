@@ -429,6 +429,14 @@ def initscr():
     return stdscr
 
 
+def endscr(stdscr: curses.window, endwin=False):
+    curses.nocbreak()
+    stdscr.keypad(False)
+    curses.echo()
+    if endwin:
+        curses.endwin()
+
+
 def save_cookies(requests_cookiejar, filename):
     with open(filename, 'wb') as f:
         pickle.dump(requests_cookiejar, f)

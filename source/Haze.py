@@ -17,7 +17,7 @@ from functions import to_dataframe, save_database, delete_database, get_appid_li
 from classes import User
 from ASF import idle_bot, cmd, wait_for_threads
 
-VERSION = '0.11.0'
+VERSION = '0.12.0'
 
 # Titulo de la ventana
 if os.name == 'nt':
