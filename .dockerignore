@@ -1,0 +1,14 @@
+.vscode/
+build/
+database/
+dist/
+source/__pycache__/
+venv/
+.env
+.gitignore
+*.spec
+LICENSE
+log.txt
+README.md
+session.pkl
+user.json
