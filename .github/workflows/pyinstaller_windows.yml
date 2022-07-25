@@ -1,0 +1,25 @@
+
+name: Compilar ejecutable para Windows con Pyinstaller
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Compilar aplicación
+      uses: JackMcKew/pyinstaller-action-windows@main
+      with:
+        path: .
+
+    - name: Subir el artefacto
+      uses: actions/upload-artifact@v3.1.0
+      with:
+        name: windows-build
+        path: .
