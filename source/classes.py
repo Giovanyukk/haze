@@ -90,12 +90,16 @@ class Game:
         # Si falla la solicitud, reintenta cada 5 segundos
         while(response.status_code != 200):
             if self.stdscr != None:
-                print_center(self.stdscr, 'Error al actualizar el juego. Reintentando en 5 segundos...')
-                sleep(5)
+                for i in range(5, 0, -1):
+                    print_center(
+                        self.stdscr, f'Error al actualizar el juego. Reintentando en {i} segundos...')
+                    sleep(1)
             else:
                 os.system('cls')
-                print('Error al actualizar el juego. Reintentando en 5 segundos...')
-                sleep(5)
+                for i in range(5, 0, -1):
+                    print(
+                        f'Error al actualizar el juego. Reintentando en {i} segundos...')
+                    sleep(1)
                 os.system('cls')
             response = self.session.get(store_URL)
 
@@ -146,12 +150,16 @@ class Game:
         # Si falla la solicitud, reintenta cada 5 segundos
         while(response.status_code != 200):
             if self.stdscr != None:
-                print_center(self.stdscr, 'Error al actualizar el juego. Reintentando en 5 segundos...')
-                sleep(5)
+                for i in range(5, 0, -1):
+                    print_center(
+                        self.stdscr, f'Error al actualizar el juego. Reintentando en {i} segundos...')
+                    sleep(1)
             else:
                 os.system('cls')
-                print('Error al actualizar el juego. Reintentando en 5 segundos...')
-                sleep(5)
+                for i in range(5, 0, -1):
+                    print(
+                        f'Error al actualizar el juego. Reintentando en {i} segundos...')
+                    sleep(1)
                 os.system('cls')
             response = self.session.get(cards_URL)
 
@@ -216,7 +224,8 @@ class User:
             if 'login' not in session.get('https://steamcommunity.com/dev/apikey').url.split('/'):
                 self.session = session
                 self.logged_on = True
-                self.steamID64 = html.fromstring(self.session.get('https://store.steampowered.com/account/').content).xpath('//*[@id="responsive_page_template_content"]/div[1]/div/div[2]')[0].text.split(' ')[3]
+                self.steamID64 = html.fromstring(self.session.get('https://store.steampowered.com/account/').content).xpath(
+                    '//*[@id="responsive_page_template_content"]/div[1]/div/div[2]')[0].text.split(' ')[3]
                 # https://steamcommunity.com/dev/apikey
                 # //*[@id="responsive_page_template_content"]/div[1]/div/div[2]
                 key = html.fromstring(self.session.get(
@@ -337,7 +346,8 @@ class User:
                 curses.cbreak()
                 curses.curs_set(0)
             except wa.TooManyLoginFailures:
-                print_center(self.stdscr, 'Demasiados intentos fallidos.\nPor favor, intente más tarde.')
+                print_center(
+                    self.stdscr, 'Demasiados intentos fallidos.\nPor favor, intente más tarde.')
                 sleep(5)
                 curses.nocbreak()
                 self.stdscr.keypad(False)
