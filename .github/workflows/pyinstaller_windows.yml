@@ -16,4 +16,9 @@ jobs:
     - name: Compilar aplicación
       uses: JackMcKew/pyinstaller-action-windows@main
       with:
-        path: .
+        path: /
+    - name: Subir artefacto
+      uses: actions/upload-artifact@v3.1.0
+      with:
+        name: windows-build
+        path: dist/Haze.exe
