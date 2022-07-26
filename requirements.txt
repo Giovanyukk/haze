@@ -10,3 +10,4 @@ google-api-python-client
 pyinstaller
 xlsxwriter
 curseXcel
+windows-curses ; sys_platform == 'win32'
