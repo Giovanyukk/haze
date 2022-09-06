@@ -101,8 +101,6 @@ try:
             appid_list = get_appid_list()
             # Da la opcion de omitir los juegos que ya estan comprados
             if(user.webAPIKey != ''):
-                if create_menu(stdscr, ['Si', 'No'], title='Omitir juegos que ya estan en la biblioteca?') == 1:
-                    break
                 stdscr.clear()
                 stdscr.refresh()
                 owned_games_URL = 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=' + \
@@ -112,8 +110,9 @@ try:
                     owned_games_URL).json()['response']
                 owned_games_list = [int(games_data['games'][x]['appid']) for x in range(
                     len(games_data['games']))]
-                appid_list = [x for x in appid_list if int(
-                    x) not in owned_games_list]
+                if create_menu(stdscr, ['Si', 'No'], title='Omitir juegos que ya estan en la biblioteca?') == 1:
+                    appid_list = [x for x in appid_list if int(
+                        x) not in owned_games_list]
                 database = pd.concat([database, to_dataframe(
                     appid_list, user.session, stdscr)], ignore_index=True)
                 save_database(database)
