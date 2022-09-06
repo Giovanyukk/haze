@@ -41,6 +41,7 @@ try:
     session = requests.session()
     session.cookies = load_cookies('session.pkl')
     user = User(session=session, stdscr=stdscr)
+    save_cookies(user.session.cookies, 'session.pkl')
 except:
     user = User(stdscr=stdscr)
     save_cookies(user.session.cookies, 'session.pkl')
